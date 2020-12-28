@@ -102,7 +102,7 @@ class User {
     return true;
   }
 
-  Insert = async function (name, passwd, address) {
+  Insert = async function(name, passwd, address) {
     let handle = await this.db.connect();
     this.name = name;
     this.passwd = Hash(passwd);
@@ -117,6 +117,10 @@ class User {
     }
     return -1;
   }
+
+  Authorize = function(passwd) {
+    return HashEq(passwd, this.passwd);
+  }
 }
 
 /* ------------------------------------------------------------------------- */
@@ -124,14 +128,15 @@ class User {
 app.get('/register', async (req, res) => {
   if ('user' in req.session) {
     res.redirect('/');
-  } else {
-    res.render('register', {
-      'serverTime': Now(),
-      'username': '',
-      'info': [],
-      'warnings': []
-    });
+    return;
   }
+
+  res.render('register', {
+    'serverTime': Now(),
+    'username': '',
+    'info': [],
+    'warnings': []
+  });
 });
 
 /* validate register form */
@@ -144,8 +149,10 @@ function registerCheck(name, address, email, passwd, repasswd) {
 }
 
 app.post('/register', async (req, res) => {
-  if ('user' in req.session)
+  if ('user' in req.session) {
     res.redirect('/');
+    return;
+  }
 
   const name = req.body.name;
   const address = req.body.address;
@@ -158,7 +165,7 @@ app.post('/register', async (req, res) => {
       'serverTime': Now(),
       'username': '',
       'info': [],
-      'warnings': ['Data is not correct.']
+      'warnings': ['Data are not correct.']
     });
   }
 
@@ -186,11 +193,60 @@ app.post('/register', async (req, res) => {
 /* ------------------------------------------------------------------------- */
 
 app.get('/login', async (req, res) => {
-  res.end('TODO');
+  if ('user' in req.session) {
+    res.redirect('/');
+    return;
+  }
+
+  res.render('login', {
+    'serverTime': Now(),
+    'username': '',
+    'info': [],
+    'warnings': []
+  });
 });
 
 app.post('/login', async (req, res) => {
-  res.end('TODO');
+  if ('user' in req.session) {
+    res.redirect('/');
+    return;
+  }
+
+  const email = req.body.email;
+  const passwd = req.body.passwd;
+
+  let user = new User(db, email);
+  if (await user.Find() == false) {
+    /* user doesn't exist */
+    res.render('login', {
+      'serverTime': Now(),
+      'username': '',
+      'info': [],
+      'warnings': [`${email} doesn't exist.`]
+    });
+    return;
+  }
+
+  if (user.Authorize(passwd) == false) {
+    /* password mismatch */
+    res.render('login', {
+      'serverTime': Now(),
+      'username': '',
+      'info': [],
+      'warnings': [`Password mismatch.`]
+    });
+    return;
+  }
+
+  req.session.user = email;
+  let user_id = user.id;
+
+  res.render('login', {
+    'serverTime': Now(),
+    'username': email,
+    'info': [`Success - your user id is ${user_id}.`],
+    'warnings': []
+  });
 });
 
 app.get('/logout', async (req, res) => {
