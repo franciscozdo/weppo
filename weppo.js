@@ -193,6 +193,13 @@ app.post('/login', async (req, res) => {
   res.end('TODO');
 });
 
+app.get('/logout', async (req, res) => {
+  delete req.session.user;
+  res.redirect('/');
+});
+
+/* ------------------------------------------------------------------------- */
+
 app.get('/', async (req, res) => {
   let user = '';
   if ('user' in req.session)
