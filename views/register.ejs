@@ -1,0 +1,54 @@
+<html>
+  <head>
+    <%- include('meta') %>
+    <title>weppo - register</title>
+  </head>
+
+  <body class="d-flex flex-column h-100">
+    <%- include('header') %>
+
+    <main class="flex-shrink-0">
+        <div class="container">
+            <h3 class="mt-5">Register</h1>
+            <form method="POST">
+                <div class="form-group col-sm-3 my-1">
+                    <label for="name">Name</label>
+                    <input name="name" type="text" class="form-control">
+                </div>
+                <div class="form-group col-sm-3 my-1">
+                    <label for="address">Address</label>
+                    <input name="address" type="text" class="form-control">
+                </div>
+                <div class="form-group col-sm-3 my-1">
+                    <label for="email">E-mail</label>
+                    <input name="email" type="email" class="form-control">
+                </div>
+                <div class="form-group col-sm-3 my-1">
+                    <label for="passwd">Password</label>
+                    <input name="passwd" type="password" class="form-control">
+                </div>
+                <div class="form-group col-sm-3 my-1">
+                    <label for="repasswd">Repeat password</label>
+                    <input name="repasswd" type="password" class="form-control">
+                </div>
+                <button type="submit" class="btn btn-primary">Sign up</button>
+            </form>
+        </div>
+
+        <div class="container">
+            <% for (let i = 0; i < info.length; i++) { %>
+                <div class="alert alert-info" role="alert">
+                    <%= info[i] %>
+                </div>
+            <% } %>
+            <% for (let i = 0; i < warnings.length; i++) { %>
+                <div class="alert alert-danger" role="alert">
+                    <%= warnings[i] %>
+                </div>
+            <% } %>
+        </div>
+    </main>
+
+    <%- include('footer') %>
+  </body>
+</html>
