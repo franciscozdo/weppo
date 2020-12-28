@@ -194,7 +194,16 @@ app.post('/login', async (req, res) => {
 });
 
 app.get('/', async (req, res) => {
-  res.end('TODO');
+  let user = '';
+  if ('user' in req.session)
+    user = req.session.user;
+
+  res.render('index', {
+    'serverTime': Now(),
+    'username': user,
+    'info': [],
+    'warnings': []
+  });
 });
 
 http.createServer(app).listen(5321);
