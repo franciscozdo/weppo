@@ -106,7 +106,7 @@ class User {
     let handle = await this.db.connect();
     this.name = name;
     this.passwd = Hash(passwd);
-    this.address = passwd;
+    this.address = address;
     let res = await handle.query(this.sqlInsert, [this.email, this.passwd, this.name, this.address])
     await handle.release();
     
@@ -148,7 +148,7 @@ app.post('/register', async (req, res) => {
     res.redirect('/');
 
   const name = req.body.name;
-  const address = req.body.name;
+  const address = req.body.address;
   const email = req.body.email;
   const passwd = req.body.passwd;
   const repasswd = req.body.repasswd;
