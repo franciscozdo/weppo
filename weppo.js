@@ -122,14 +122,16 @@ class User {
 /* ------------------------------------------------------------------------- */
 
 app.get('/register', async (req, res) => {
-  if ('user' in req.session)
+  if ('user' in req.session) {
     res.redirect('/');
-
-  res.render('register', {
-    'serverTime': Now(),
-    'info': [],
-    'warnings': []
-  });
+  } else {
+    res.render('register', {
+      'serverTime': Now(),
+      'username': '',
+      'info': [],
+      'warnings': []
+    });
+  }
 });
 
 /* validate register form */
@@ -154,6 +156,7 @@ app.post('/register', async (req, res) => {
   if (registerCheck(name, address, email, passwd, repasswd) == false) {
     res.render('register', {
       'serverTime': Now(),
+      'username': '',
       'info': [],
       'warnings': ['Data is not correct.']
     });
@@ -165,6 +168,7 @@ app.post('/register', async (req, res) => {
   if (user_id == -1) {
     res.render('register', {
       'serverTime': Now(),
+      'username': '',
       'info': [],
       'warnings': [`${email} is already used.`]
     });
@@ -172,6 +176,7 @@ app.post('/register', async (req, res) => {
     req.session.user = email;
     res.render('register', {
       'serverTime': Now(),
+      'username': email,
       'info': [`Success - your user id is ${user_id}.`],
       'warnings': []
     });
