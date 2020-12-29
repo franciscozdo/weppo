@@ -125,12 +125,15 @@ class User {
 
 /* ------------------------------------------------------------------------- */
 
-app.get('/register', async (req, res) => {
+async function skipLogin(req, res, next) {
   if ('user' in req.session) {
     res.redirect('/');
     return;
   }
+  next();
+}
 
+app.get('/register', skipLogin, async (req, res) => {
   res.render('register', {
     'serverTime': Now(),
     'username': '',
@@ -148,12 +151,7 @@ function registerCheck(name, address, email, passwd, repasswd) {
   return true;
 }
 
-app.post('/register', async (req, res) => {
-  if ('user' in req.session) {
-    res.redirect('/');
-    return;
-  }
-
+app.post('/register', skipLogin, async (req, res) => {
   const name = req.body.name;
   const address = req.body.address;
   const email = req.body.email;
@@ -192,12 +190,7 @@ app.post('/register', async (req, res) => {
 
 /* ------------------------------------------------------------------------- */
 
-app.get('/login', async (req, res) => {
-  if ('user' in req.session) {
-    res.redirect('/');
-    return;
-  }
-
+app.get('/login', skipLogin, async (req, res) => {
   res.render('login', {
     'serverTime': Now(),
     'username': '',
@@ -206,12 +199,7 @@ app.get('/login', async (req, res) => {
   });
 });
 
-app.post('/login', async (req, res) => {
-  if ('user' in req.session) {
-    res.redirect('/');
-    return;
-  }
-
+app.post('/login', skipLogin, async (req, res) => {
   const email = req.body.email;
   const passwd = req.body.passwd;
 
