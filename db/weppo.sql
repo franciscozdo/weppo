@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS discounts (
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS users_email ON users (email);
-CREATE UNIQUE INDEX IF NOT EXISTS roles_user_id ON user_role (user_id);
-CREATE UNIQUE INDEX IF NOT EXISTS orders_user_id ON orders (user_id);
-CREATE UNIQUE INDEX IF NOT EXISTS item_in_order_order_id ON item_order (order_id);
-CREATE UNIQUE INDEX IF NOT EXISTS discounts_item_id ON discounts (item_id);
+CREATE INDEX IF NOT EXISTS roles_user_id ON user_role (user_id);
+CREATE INDEX IF NOT EXISTS orders_user_id ON orders (user_id);
+CREATE INDEX IF NOT EXISTS item_order_order_id ON item_order (order_id);
+CREATE INDEX IF NOT EXISTS discounts_item_id ON discounts (item_id);
