@@ -16,6 +16,7 @@ const kDbUser = 'weppo';
 const kDbPasswd = 'weppo';
 const kDbName = 'weppo';
 const kBcryptRounds = 10;
+const kAdminRole = 'admin';
 
 let db = new pg.Pool({
   host: kDbHost,
@@ -71,10 +72,12 @@ class User {
     this.passwd = '';
     this.name = '';
     this.address = '';
+    this.roles = [];
 
     this.sqlUpdate = 'UPDATE users SET email=$2, passwd=$3, name=$4, address=$5 WHERE id=$1';
     this.sqlFind = 'SELECT id, email, passwd, name, address FROM users WHERE email=$1';
     this.sqlInsert = 'INSERT INTO users (email, passwd, name, address) VALUES ($1, $2, $3, $4) ON CONFLICT (email) DO NOTHING RETURNING id';
+    this.sqlRoles = 'SELECT roles.role FROM roles INNER JOIN user_role ON user_role.role_id=roles.id INNER JOIN users ON users.id=user_role.user_id WHERE users.id=$1';
   }
 
   Update = async function() {
@@ -87,17 +90,26 @@ class User {
   Find = async function() {
     let handle = await this.db.connect();
     let res = await handle.query(this.sqlFind, [this.email]);
-    await handle.release();
     
     let row = res.rows;
-    if (row.length != 1)
+    if (row.length != 1) {
+      await handle.release();
       return false;
+    }
 
     this.id = row[0]['id'];
     this.email = row[0]['email'];
     this.passwd = row[0]['passwd'];
     this.name = row[0]['name'];
     this.address = row[0]['address'];
+
+    let roles = await handle.query(this.sqlRoles, [this.id]);
+    await handle.release();
+
+    roles = roles.rows;
+    for (let i = 0; i < roles.length; ++i) {
+      this.roles.push(roles[i]['role']);
+    }
 
     return true;
   }
@@ -120,6 +132,13 @@ class User {
 
   Authorize = function(passwd) {
     return HashEq(passwd, this.passwd);
+  }
+
+  Admin = async function() {
+    if (await this.Find() == false)
+      return false;
+    
+    return this.roles.includes(kAdminRole);
   }
 }
 
@@ -240,6 +259,43 @@ app.post('/login', skipLogin, async (req, res) => {
 app.get('/logout', async (req, res) => {
   delete req.session.user;
   res.redirect('/');
+});
+
+/* ------------------------------------------------------------------------- */
+
+async function requireAdmin(req, res, next) {
+  if ('user' in req.session) {
+    let user = new User(db, req.session.user);
+    if (user.Admin()) {
+      next();
+      return;
+    }
+  }
+  res.status(403).end('403');
+}
+
+/* ------------------------------------------------------------------------- */
+
+app.put('/api/v1/role/add/:role', requireAdmin, async (req, res) => {
+  let handle = await db.connect();
+  await handle.query('INSERT INTO roles (role) VALUES ($1) ON CONFLICT (role) DO NOTHING', [req.params.role]);
+  await handle.release();
+  res.end('ok');
+});
+
+app.put('/api/v1/user/:user_id/role/add/:role_id', requireAdmin, async (req, res) => {
+  let handle = await db.connect();
+  try {
+    await handle.query('INSERT INTO user_role (user_id, role_id) VALUES ($1, $2)', [req.params.user_id, req.params.role_id]);
+    res.end('ok');
+  } catch (ex) {
+    consoel.log('====== EXCEPTION ======');
+    console.log(ex);
+    consoel.log('=======================');
+    res.end('failure');
+  } finally {
+    await handle.release();
+  }
 });
 
 /* ------------------------------------------------------------------------- */
