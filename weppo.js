@@ -266,7 +266,7 @@ app.get('/logout', async (req, res) => {
 async function requireAdmin(req, res, next) {
   if ('user' in req.session) {
     let user = new User(db, req.session.user);
-    if (user.Admin()) {
+    if (await user.Admin()) {
       next();
       return;
     }
