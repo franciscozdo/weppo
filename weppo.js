@@ -450,6 +450,37 @@ app.put('/api/v1/item/add', requireAdmin, express.json(), async (req, res) => {
   res.json({ id: item_id });
 });
 
+async function validateItemUpdate(req) {
+  if (validateItemAdd(req) == false || !('id' in req)) {
+    return false;
+  }
+
+  let item = new Item(db, req.id);
+  return await item.Find();
+}
+
+app.put('/api/v1/item/update', requireAdmin, express.json(), async (req, res) => {
+  if (await validateItemUpdate(req.body) == false) {
+    res.status(400).end('data mismatch');
+    return;
+  }
+
+  /* it's a correct solution but _not_ good */
+  let item = new Item(db, req.body.id);
+  await item.Find();
+
+  item.name = req.body.name;
+  item.price = req.body.price;
+  item.amount = req.body.amount;
+  item.available = req.body.available;
+  item.hidden = req.body.hidden;
+
+  await item.Update();
+  res.end('ok');
+});
+
+/* ------------------------------------------------------------------------- */
+
 async function validateDiscount(req) {
   if (!('item_id' in req && 'discount' in req && 'rule' in req)) {
     return false;
