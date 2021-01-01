@@ -479,6 +479,27 @@ app.put('/api/v1/item/update', requireAdmin, express.json(), async (req, res) =>
   res.end('ok');
 });
 
+app.get('/api/v1/item/list', async (req, res) => {
+  let handle = await db.connect();
+  let ret = await handle.query('SELECT id, name, price, amount, available, hidden FROM items');
+  await handle.release();
+
+  let items = []
+
+  for (let i = 0; i < ret.rows.length; ++i) {
+    items.push({
+      'id': ret.rows[i]['id'],
+      'name': ret.rows[i]['name'],
+      'price': ret.rows[i]['price'],
+      'amount': ret.rows[i]['amount'],
+      'available': ret.rows[i]['available'],
+      'hidden': ret.rows[i]['hidden']
+    });
+  }
+
+  res.json(items);
+});
+
 /* ------------------------------------------------------------------------- */
 
 async function validateDiscount(req) {
