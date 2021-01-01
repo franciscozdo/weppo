@@ -273,6 +273,63 @@ class Discount {
   }
 }
 
+class Order {
+  constructor(db, id) {
+    this.db = db
+    this.id = id;
+    this.user_id = -1;
+    this.price = -1;
+    this.paid = false;
+
+    this.sqlUpdate = 'UPDATE orders SET user_id=$2, price=$3, paid=$4 WHERE id=$1';
+    this.sqlFind = 'SELECT id, user_id, price, paid FROM orders WHERE id=$1';
+    this.sqlInsert = 'INSERT INTO orders (user_id, price, paid) VALUES ($1, $2, $3) RETURNING id';
+  }
+  
+  Update = async function() {
+    /* let's assume that this is a _valid_ order */
+    let handle = await this.db.connect();
+    await handle.query(this.sqlUpdate, [this.id, this.user_id, this.price, this.paid]);
+    await handle.release();
+  }
+
+  Find = async function() {
+    let handle = await this.db.connect();
+    let res = await handle.query(this.sqlFind, [this.id]);
+    await handle.release();
+
+    let row = res.rows;
+    if (row.length != 1) {
+      return false;
+    }
+
+    this.id = row[0]['id'];
+    this.user_id = row[0]['user_id'];
+    this.price = row[0]['price'];
+    this.paid = row[0]['paid'];
+
+    return true;
+  }
+
+  Insert = async function(user_id, price, paid) {
+    let handle = await this.db.connect();
+
+    this.user_id = user_id;
+    this.price = price;
+    this.paid = paid;
+
+    let res = await handle.query(this.sqlInsert, [this.user_id, this.price, this.paid]);
+    await handle.release();
+
+    let row = res.rows;
+    if (row.length == 1) {
+      this.id = row[0]['id'];
+      return this.id;
+    }
+    return -1;
+  }
+}
+
 /* ------------------------------------------------------------------------- */
 
 async function skipLogin(req, res, next) {
@@ -401,6 +458,14 @@ async function requireAdmin(req, res, next) {
       next();
       return;
     }
+  }
+  res.status(403).end('403');
+}
+
+async function requireLogin(req, res, next) {
+  if ('user' in req.session) {
+    next();
+    return;
   }
   res.status(403).end('403');
 }
@@ -564,6 +629,16 @@ app.get('/api/v1/discount/list/:item_id', async (req, res) => {
   }
 
   res.json(discounts);
+});
+
+app.put('/api/v1/order/create', requireLogin, async (req, res) => {
+  let user = new User(db, req.session.user);
+  await user.Find();
+
+  let order = new Order(db, -1);
+  let order_id = await order.Insert(user.id, 0, false);
+
+  res.json({'id': order_id});
 });
 
 /* ------------------------------------------------------------------------- */
