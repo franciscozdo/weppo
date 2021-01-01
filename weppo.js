@@ -153,7 +153,7 @@ class Item {
     this.hidden = true;
 
     this.sqlUpdate = 'UPDATE items SET name=$2, price=$3, amount=$4, available=$5, hidden=$6 WHERE id=$1';
-    this.sqlFind = 'SELECT id, name, price, amount, available, hidden WHERE id=$1';
+    this.sqlFind = 'SELECT id, name, price, amount, available, hidden FROM items WHERE id=$1';
     this.sqlInsert = 'INSERT INTO items (name, price, amount, available, hidden) VALUES ($1, $2, $3, $4, $5) RETURNING id';
   }
 
@@ -202,6 +202,74 @@ class Item {
       return this.id;
     }
     return -1;
+  }
+}
+
+class Discount {
+  constructor(db, id) {
+    this.db = db
+    this.id = id;
+    this.item_id = -1;
+    this.discount = 0;
+    this.rule = '';
+
+    this.sqlUpdate = 'UPDATE discounts SET item_id=$2, discount=$3, rule=$4 WHERE id=$1';
+    this.sqlFind = 'SELECT id, item_id, discount, rule FROM discounts WHERE id=$1';
+    this.sqlInsert = 'INSERT INTO discounts (item_id, discount, rule) VALUES ($1, $2, $3) RETURNING id';
+  }
+
+  Update = async function() {
+    /* let's assume that this is a _valid_ discount */
+    let handle = await this.db.connect();
+    await handle.query(this.sqlUpdate, [this.item_id, this.discount, this.rule]);
+    await handle.release();
+  }
+
+  Find = async function() {
+    let handle = await this.db.connect();
+    let res = await handle.query(this.sqlFind, [this.id]);
+    await handle.release();
+
+    let row = res.rows;
+    if (row.length != 1) {
+      return false;
+    }
+
+    this.id = row[0]['id'];
+    this.item_id = row[0]['item_id'];
+    this.discount = row[0]['discount'];
+    this.rule = row[0]['rule'];
+
+    return true;
+  }
+
+  Insert = async function(item_id, discount, rule) {
+    let handle = await this.db.connect();
+
+    this.item_id = item_id;
+    this.discount = discount;
+    this.rule = rule;
+
+    let res = await handle.query(this.sqlInsert, [this.item_id, this.discount, this.rule]);
+    await handle.release();
+
+    let row = res.rows;
+    if (row.length == 1) {
+      this.id = row[0]['id'];
+      return this.id;
+    }
+    return -1;
+  }
+
+  Invalidate = async function() {
+    /* 0 is a neutral value for discount */
+    this.discount = 0;
+    await this.Update();
+  }
+
+  Valid = async function() {
+    await this.Find();
+    return this.discount != 0;
   }
 }
 
@@ -352,10 +420,10 @@ app.put('/api/v1/user/:user_id/role/add/:role_id', requireAdmin, async (req, res
     await handle.query('INSERT INTO user_role (user_id, role_id) VALUES ($1, $2)', [req.params.user_id, req.params.role_id]);
     res.end('ok');
   } catch (ex) {
-    consoel.log('====== EXCEPTION ======');
+    console.log('====== EXCEPTION ======');
     console.log(ex);
-    consoel.log('=======================');
-    res.end('failure');
+    console.log('=======================');
+    res.status(400).end('failure');
   } finally {
     await handle.release();
   }
@@ -371,17 +439,67 @@ app.put('/api/v1/item/add', requireAdmin, express.json(), async (req, res) => {
     return;
   }
 
-  let item = new Item(db, -1);
+  let item = new Item(db, /* id */ -1);
   let item_id = await item.Insert(req.body.name, req.body.price, req.body.amount, req.body.available, req.body.hidden);
   
   if (item_id == -1) {
     res.status(500).end('internal error');
     return;
-  } else {
-
   }
 
   res.json({ id: item_id });
+});
+
+async function validateDiscount(req) {
+  if (!('item_id' in req && 'discount' in req && 'rule' in req)) {
+    return false;
+  }
+
+  let item = new Item(db, req.item_id);
+  if (await item.Find() == false) {
+    return false;
+  }
+
+  return true;
+}
+
+app.put('/api/v1/discount/add', requireAdmin, express.json(), async (req, res) => {
+  if (await validateDiscount(req.body) == false) {
+    res.status(400).end('data mismatch');
+    return;
+  }
+
+  /* now we are sure that item _exists_ */
+  let discount = new Discount(db, /* id */ -1);
+  let discount_id = await discount.Insert(req.body.item_id, req.body.discount, req.body.rule);
+
+  if (discount_id == -1) {
+    res.status(500).end('internal error');
+    return;
+  }
+
+  res.json({ id: discount_id });
+});
+
+app.get('/api/v1/discount/list/:item_id', async (req, res) => {
+  let item_id = req.params.item_id;
+  
+  let handle = await db.connect();
+  let ret = await handle.query('SELECT * FROM discounts WHERE item_id=$1', [item_id]);
+  await handle.release();
+
+  discounts = [];
+
+  for (let i = 0; i < ret.rows.length; ++i) {
+    discounts.push({
+      'id': ret.rows[i]['id'],
+      'item_id': ret.rows[i]['item_id'],
+      'discount': ret.rows[i]['discount'],
+      'rule': ret.rows[i]['rule']
+    });
+  }
+
+  res.json(discounts);
 });
 
 /* ------------------------------------------------------------------------- */
