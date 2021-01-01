@@ -142,6 +142,69 @@ class User {
   }
 }
 
+class Item {
+  constructor(db, id) {
+    this.db = db
+    this.id = id;
+    this.name = '';
+    this.price = -1;
+    this.amount = -1;
+    this.available = false;
+    this.hidden = true;
+
+    this.sqlUpdate = 'UPDATE items SET name=$2, price=$3, amount=$4, available=$5, hidden=$6 WHERE id=$1';
+    this.sqlFind = 'SELECT id, name, price, amount, available, hidden WHERE id=$1';
+    this.sqlInsert = 'INSERT INTO items (name, price, amount, available, hidden) VALUES ($1, $2, $3, $4, $5) RETURNING id';
+  }
+
+  Update = async function() {
+    /* let's assume that this is a _valid_ item */
+    let handle = await this.db.connect();
+    await handle.query(this.sqlUpdate, [this.id, this.name, this.price, this.amount, this.available, this.hidden]);
+    await handle.release();
+  }
+
+  Find = async function() {
+    let handle = await this.db.connect();
+    let res = await handle.query(this.sqlFind, [this.id]); 
+    await handle.release();
+
+    let row = res.rows;
+    if (row.length != 1) {
+      return false;
+    }
+
+    this.id = row[0]['id'];
+    this.name = row[0]['name'];
+    this.price = row[0]['price'];
+    this.amount = row[0]['amount'];
+    this.available = row[0]['available'];
+    this.hidden = row[0]['hidden'];
+
+    return true;
+  }
+
+  Insert = async function(name, price, amount, available, hidden) {
+    let handle = await this.db.connect();
+
+    this.name = name;
+    this.price = price;
+    this.amount = amount;
+    this.available = available;
+    this.hidden = hidden;
+
+    let res = await handle.query(this.sqlInsert, [this.name, this.price, this.amount, this.available, this.hidden])
+    await handle.release();
+    
+    let row = res.rows;
+    if (row.length == 1) {
+      this.id = row[0]['id'];
+      return this.id;
+    }
+    return -1;
+  }
+}
+
 /* ------------------------------------------------------------------------- */
 
 async function skipLogin(req, res, next) {
@@ -296,6 +359,29 @@ app.put('/api/v1/user/:user_id/role/add/:role_id', requireAdmin, async (req, res
   } finally {
     await handle.release();
   }
+});
+
+function validateItemAdd(req) {
+  return ('name' in req && 'price' in req && 'amount' in req && 'available' in req && 'hidden' in req);
+}
+
+app.put('/api/v1/item/add', requireAdmin, express.json(), async (req, res) => {
+  if (validateItemAdd(req.body) == false) {
+    res.status(400).end('data mismatch');
+    return;
+  }
+
+  let item = new Item(db, -1);
+  let item_id = await item.Insert(req.body.name, req.body.price, req.body.amount, req.body.available, req.body.hidden);
+  
+  if (item_id == -1) {
+    res.status(500).end('internal error');
+    return;
+  } else {
+
+  }
+
+  res.json({ id: item_id });
 });
 
 /* ------------------------------------------------------------------------- */
