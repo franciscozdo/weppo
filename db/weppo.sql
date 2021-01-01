@@ -22,7 +22,8 @@ CREATE TABLE IF NOT EXISTS user_role  (
 CREATE TABLE IF NOT EXISTS orders (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL,
-    price FLOAT NOT NULL,
+    -- it's hard to handle price here... let's do that in more ugly way :)
+    -- price FLOAT NOT NULL,
     paid BOOLEAN,
     FOREIGN KEY(user_id) REFERENCES users(id)
 );

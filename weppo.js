@@ -278,18 +278,17 @@ class Order {
     this.db = db
     this.id = id;
     this.user_id = -1;
-    this.price = -1;
     this.paid = false;
 
-    this.sqlUpdate = 'UPDATE orders SET user_id=$2, price=$3, paid=$4 WHERE id=$1';
-    this.sqlFind = 'SELECT id, user_id, price, paid FROM orders WHERE id=$1';
-    this.sqlInsert = 'INSERT INTO orders (user_id, price, paid) VALUES ($1, $2, $3) RETURNING id';
+    this.sqlUpdate = 'UPDATE orders SET user_id=$2, paid=$3 WHERE id=$1';
+    this.sqlFind = 'SELECT id, user_id, paid FROM orders WHERE id=$1';
+    this.sqlInsert = 'INSERT INTO orders (user_id, paid) VALUES ($1, $2) RETURNING id';
   }
   
   Update = async function() {
     /* let's assume that this is a _valid_ order */
     let handle = await this.db.connect();
-    await handle.query(this.sqlUpdate, [this.id, this.user_id, this.price, this.paid]);
+    await handle.query(this.sqlUpdate, [this.id, this.user_id, this.paid]);
     await handle.release();
   }
 
@@ -305,20 +304,18 @@ class Order {
 
     this.id = row[0]['id'];
     this.user_id = row[0]['user_id'];
-    this.price = row[0]['price'];
     this.paid = row[0]['paid'];
 
     return true;
   }
 
-  Insert = async function(user_id, price, paid) {
+  Insert = async function(user_id, paid) {
     let handle = await this.db.connect();
 
     this.user_id = user_id;
-    this.price = price;
     this.paid = paid;
 
-    let res = await handle.query(this.sqlInsert, [this.user_id, this.price, this.paid]);
+    let res = await handle.query(this.sqlInsert, [this.user_id,  this.paid]);
     await handle.release();
 
     let row = res.rows;
@@ -636,9 +633,69 @@ app.put('/api/v1/order/create', requireLogin, async (req, res) => {
   await user.Find();
 
   let order = new Order(db, -1);
-  let order_id = await order.Insert(user.id, 0, false);
+  let order_id = await order.Insert(user.id, false);
 
   res.json({'id': order_id});
+});
+
+app.put('/api/v1/order/add/:order_id/:item_id', requireLogin, async (req, res) => {
+  /* ughh... it's horrible... */
+  
+  /* 1. find user - we already have called requireLogin so somebody _should_ exist */
+  let user = new User(db, req.session.user);
+  await user.Find();
+
+  /* 2. find order */
+  let order = new Order(db, req.params.order_id);
+  if (await order.Find() == false) {
+    /* 2.1 order doesn't exist */
+    res.status(400).end('data mismatch');
+    return;
+  }
+
+  /* 4. order must be open */
+  if (order.paid) {
+    res.status(400).end('data mismatch');
+    return;
+  }
+
+  /* 4. find item */
+  let item = new Item(db, req.params.item_id);
+  if (await item.Find() == false) {
+    /* 4.1 item doesn't exist */
+    res.status(400).end('data mismatch');
+    return;
+  }
+
+  /* 5. check available */
+  if (item.available == false) {
+    /* we shouldn't be here... but our permission model is stupid :) */
+    res.status(400).end('data mismatch');
+    return;
+  }
+
+  /* 6. check amount */
+  if (item.amount == 0) {
+    res.status(400).end('data mismatch');
+    return;
+  }
+
+  /* ughh... I don't have any idea what to do with hidden field here... */
+
+
+  /* ok... it's time to add item into order */
+  let stmt = 'INSERT INTO item_order (item_id, order_id) VALUES ($1, $2)';
+  let handle = await db.connect();
+  
+  await handle.query(stmt, [item.id, order.id]);
+
+  item.amount--;
+  await item.Update();
+
+  await handle.release();
+
+  /* get out of hell */
+  res.end('ok');
 });
 
 /* ------------------------------------------------------------------------- */
