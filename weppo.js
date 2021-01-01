@@ -221,7 +221,7 @@ class Discount {
   Update = async function() {
     /* let's assume that this is a _valid_ discount */
     let handle = await this.db.connect();
-    await handle.query(this.sqlUpdate, [this.item_id, this.discount, this.rule]);
+    await handle.query(this.sqlUpdate, [this.id, this.item_id, this.discount, this.rule]);
     await handle.release();
   }
 
@@ -479,6 +479,18 @@ app.put('/api/v1/discount/add', requireAdmin, express.json(), async (req, res) =
   }
 
   res.json({ id: discount_id });
+});
+
+app.delete('/api/v1/discount/delete/:discount_id', requireAdmin, async (req, res) => {
+  let discount = new Discount(db, req.params.discount_id);
+
+  if (await discount.Find() == false) {
+    res.status(400).end('discount not found');
+    return;
+  }
+
+  await discount.Invalidate();
+  res.end('ok');
 });
 
 app.get('/api/v1/discount/list/:item_id', async (req, res) => {
