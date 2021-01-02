@@ -709,6 +709,51 @@ app.put('/api/v1/order/add/:order_id/:item_id', requireLogin, async (req, res) =
   res.end('ok');
 });
 
+app.delete('/api/v1/order/delete/:order_id/:item_order_id', requireLogin, async (req, res) => {
+  /* 1. find user - we already have called requireLogin so somebody _should_ exist */
+  let user = new User(db, req.session.user);
+  await user.Find();
+
+  /* 2. find order */
+  let order = new Order(db, req.params.order_id);
+  if (await order.Find() == false) {
+    /* 2.1 order doesn't exist */
+    res.status(400).end('data mismatch');
+    return;
+  }
+
+  /* 4. order must be open */
+  if (order.paid) {
+    res.status(400).end('data mismatch');
+    return;
+  }
+
+  /* 5. user must be an owner of order */
+  if (order.user_id != user.id) {
+    res.status(400).end('data mismatch');
+    return;
+  }
+
+  /* 6. invalidate item */
+
+  let sqlFind = 'SELECT item_id FROM item_order WHERE id=$1';
+  let sqlDelete = 'DELETE FROM item_order WHERE id=$1';
+  let handle = await db.connect();
+
+  /* 6.1 update amount */
+  let ret = await handle.query(sqlFind, [req.params.item_order_id]);
+  let item = new Item(db, ret.rows[0]['item_id']);
+  await item.Find();
+  item.amount++;
+  await item.Update();
+
+  /* 6.2 delete old item */
+  await handle.query(sqlDelete, [req.params.item_order_id]);
+
+  await handle.release();
+  res.end('ok');
+});
+
 app.get('/api/v1/order/user/:user_id/list', requireLogin, async (req, res) => {
   /* 1. recv user */
   let user = new User(db, '');
