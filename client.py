@@ -94,6 +94,8 @@ class Commands():
     rsp = self._session.get(uri)
     items = json.loads(rsp.content.decode('utf-8'))
     return items
+  
+  #############################################################################
 
   def discount_add(self, line):
     uri = self._make_uri('/api/v1/discount/add')
@@ -104,13 +106,15 @@ class Commands():
   def discount_list(self, item_id):
     uri = self._make_uri('/api/v1/discount/list/%s' % (item_id))
     rsp = self._session.get(uri)
-    items = json.loads(rsp.content.decode('utf-8'))
-    return items
+    discounts = json.loads(rsp.content.decode('utf-8'))
+    return discounts
 
   def discount_delete(self, discount_id):
     uri = self._make_uri('/api/v1/discount/delete/%s' % (discount_id))
     rsp = self._session.delete(uri)
     return rsp.status_code == 200
+
+  #############################################################################
 
   def order_create(self):
     uri = self._make_uri('/api/v1/order/create')
@@ -122,6 +126,28 @@ class Commands():
   def order_add(self, order_id, item_id):
     uri = self._make_uri('/api/v1/order/add/%s/%s' % (order_id, item_id))
     rsp = self._session.put(uri)
+    return rsp.status_code == 200
+
+  def order_list(self, user_id):
+    uri = self._make_uri('/api/v1/order/user/%s/list' % (user_id))
+    rsp = self._session.get(uri)
+    orders = json.loads(rsp.content.decode('utf-8'))
+    return orders
+
+  def order_pay(self, order_id):
+    uri = self._make_uri('/api/v1/order/%s/pay' % (order_id))
+    rsp = self._session.put(uri)
+    return rsp.status_code == 200
+
+  def order_item_list(self, order_id):
+    uri = self._make_uri('/api/v1/order/list/%s' % (order_id))
+    rsp = self._session.get(uri)
+    items = json.loads(rsp.content.decode('utf-8'))
+    return items
+
+  def order_delete(self, order_id, item_id):
+    uri = self._make_uri('/api/v1/order/delete/%s/%s' % (order_id, item_id))
+    rsp = self._session.delete(uri)
     return rsp.status_code == 200
 
   #############################################################################
@@ -138,6 +164,8 @@ class Commands():
     if len(prompt) > 0:
       prompt = ' [' + prompt + ']'
     return prompt
+  
+###############################################################################
 
 class WeppoCli(cmd.Cmd):
   def __init__(self, base):
@@ -164,6 +192,8 @@ class WeppoCli(cmd.Cmd):
       print('>>> success')
     else:
       print('>>> failure')
+  
+  #############################################################################
 
   @UpdatePrompt
   def do_register(self, line):
@@ -238,11 +268,39 @@ class WeppoCli(cmd.Cmd):
     order_id, item_id = line.split()
     self._sif(self._c.order_add(order_id, item_id))
 
+  @UpdatePrompt
+  def do_order_list(self, line):
+    user_id = int(line)
+    rsp = self._c.order_list(user_id)
+    for order in rsp:
+      print(order)
+
+  @UpdatePrompt
+  def do_order_pay(self, line):
+    order_id = int(line)
+    self._sif(self._c.order_pay(order_id));
+
+  @UpdatePrompt
+  def do_order_item_list(self, line):
+    order_id = int(line)
+    rsp = self._c.order_item_list(order_id)
+    for item in rsp:
+      print(item)
+
+  @UpdatePrompt
+  def do_order_delete(self, line):
+    order_id, item_id = line.split();
+    self._sif(self._c.order_delete(order_id, item_id))
+
+  #############################################################################
+
   def do_quit(self, line):
     return self._exit()
 
   def do_EOF(self, line):
     return self._exit()
+
+###############################################################################
 
 def main():
   if len(sys.argv) != 2:
