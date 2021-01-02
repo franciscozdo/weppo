@@ -76,6 +76,7 @@ class User {
 
     this.sqlUpdate = 'UPDATE users SET email=$2, passwd=$3, name=$4, address=$5 WHERE id=$1';
     this.sqlFind = 'SELECT id, email, passwd, name, address FROM users WHERE email=$1';
+    this.sqlFindById = 'SELECT id, email, passwd, name, address FROM users WHERE id=$1';
     this.sqlInsert = 'INSERT INTO users (email, passwd, name, address) VALUES ($1, $2, $3, $4) ON CONFLICT (email) DO NOTHING RETURNING id';
     this.sqlRoles = 'SELECT roles.role FROM roles INNER JOIN user_role ON user_role.role_id=roles.id INNER JOIN users ON users.id=user_role.user_id WHERE users.id=$1';
   }
@@ -87,10 +88,7 @@ class User {
     await handle.release();
   }
 
-  Find = async function() {
-    let handle = await this.db.connect();
-    let res = await handle.query(this.sqlFind, [this.email]);
-    
+  _findCommon = async function(handle, res) {
     let row = res.rows;
     if (row.length != 1) {
       await handle.release();
@@ -112,6 +110,19 @@ class User {
     }
 
     return true;
+  }
+
+  Find = async function() {
+    let handle = await this.db.connect();
+    let res = await handle.query(this.sqlFind, [this.email]);
+    return await this._findCommon(handle, res);
+  }
+
+  FindById = async function(id) {
+    this.id = id;
+    let handle = await this.db.connect();
+    let res = await handle.query(this.sqlFindById, [this.id]);
+    return await this._findCommon(handle, res);
   }
 
   Insert = async function(name, passwd, address) {
@@ -696,6 +707,41 @@ app.put('/api/v1/order/add/:order_id/:item_id', requireLogin, async (req, res) =
 
   /* get out of hell */
   res.end('ok');
+});
+
+app.get('/api/v1/order/user/:user_id/list', requireLogin, async (req, res) => {
+  /* 1. recv user */
+  let user = new User(db, '');
+  if (await user.FindById(req.params.user_id) == false) {
+    res.status(400).end('data mismatch');
+    return;
+  }
+
+  /* 2. check permission */
+  let me = new User(db, req.session.user);
+  if (await me.Admin() == false && me.id != user.id) {
+    res.status(403).end('403');
+    return;
+  }
+
+  /* 3. recv orders */
+  let orders = [];
+
+  let sql = 'SELECT id, user_id, paid FROM orders WHERE user_id=$1';
+  let handle = await db.connect();
+
+  let ret = await handle.query(sql, [user.id]);
+
+  for (let i = 0; i < ret.rows.length; ++i) {
+    orders.push({
+      'id': ret.rows[i]['id'],
+      'user_id': ret.rows[i]['user_id'],
+      'paid': ret.rows[i]['paid']
+    });
+  }
+
+  await handle.release();
+  res.json(orders);
 });
 
 /* ------------------------------------------------------------------------- */
