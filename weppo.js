@@ -744,6 +744,28 @@ app.get('/api/v1/order/user/:user_id/list', requireLogin, async (req, res) => {
   res.json(orders);
 });
 
+app.put('/api/v1/order/:order_id/pay', requireLogin, async (req, res) => {
+  /* 1. recv user */
+  let user = new User(db, req.session.user);
+  await user.Find();
+
+  /* 2. check permission */
+  let order = new Order(db, req.params.order_id);
+  if (await order.Find() == false) {
+    res.status(400).end('data mismatch');
+    return;
+  }
+  if (order.user_id != user.id) {
+    res.status(400).end('data mismatch');
+    return;
+  }
+
+  order.paid = true;
+  await order.Update();
+
+  res.end('ok');
+});
+
 /* ------------------------------------------------------------------------- */
 
 app.get('/', async (req, res) => {
