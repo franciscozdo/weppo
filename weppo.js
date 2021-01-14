@@ -859,4 +859,12 @@ app.get('/', async (req, res) => {
   });
 });
 
+app.get('/item/list', async (req, res) => {
+  res.render('item_list', {});
+});
+
+app.get('/item/:id', async (req, res) => {
+  res.render('item', {'itemID': req.params.id});
+});
+
 http.createServer(app).listen(5321);

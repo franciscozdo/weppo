@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <%- include('meta') %>
+  <script src="/scripts/init.js"></script>
+  <script src="/scripts/data.js"></script>
+  <title>weppo - items</title>
+</head>
+<body>
+  <h1>Items</h1>
+  <ul id="itemList"></ul>
+  <script>
+    document.onload = getItemList(insertItemList);
+  </script>
+</body>
+</html>
