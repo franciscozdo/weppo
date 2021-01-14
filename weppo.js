@@ -31,6 +31,7 @@ app.set('views', kViewsDir);
 app.set('trust proxy', 'loopback');
 
 app.use(bodyParser.urlencoded({ extended: true }))
+app.use(express.static('static'))
 
 /* let's use in memory storage */ 
 app.use(session({
