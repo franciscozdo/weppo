@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <%- include('meta') %>
+  <script src="/scripts/init.js"></script>
+  <script src="/scripts/data.js"></script>
+  <script src="/scripts/action.js"></script>
+  <title>weppo - item add</title>
+</head>
+<body>
+  <div>Hi <%= user %></div>
+  <div id="console">
+  <form action="" id="itemAdd">
+    <div>
+    <label for="name">Name</label>
+    <input type="text" name="name">
+    </div>
+    <div>
+    <label for="price">Price</label>
+    <input type="number" name="price">
+    </div>
+    <div>
+    <label for="amount">Amount</label>
+    <input type="number" name="amount">
+    </div>
+    <div>
+    <label for="available">Available</label>
+    <input type="checkbox" name="available" checked="true">
+    </div>
+  </form>
+  <button onclick="addItem()">Add item</button>
+  </div>
+</body>
+</html>

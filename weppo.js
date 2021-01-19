@@ -859,12 +859,25 @@ app.get('/', async (req, res) => {
   });
 });
 
-app.get('/item/list', async (req, res) => {
+app.get('/list/item', async (req, res) => {
   res.render('item_list', {});
 });
 
 app.get('/item/:id', async (req, res) => {
   res.render('item', {'itemID': req.params.id});
+});
+
+app.get('/add/item', requireAdmin, async (req, res) => {
+  res.render('item_add', { user: req.session.user });
+});
+
+app.get('/update/item/:id', requireAdmin, async (req, res) => {
+  res.render('item_update', { user: req.session.user, itemID: req.params.id });
+});
+
+/* list of discounts with actions add and delete */
+app.get('/discounts', requireAdmin, async (req, res) => {
+  res.render('discounts', {user: req.session.user });
 });
 
 http.createServer(app).listen(5321);

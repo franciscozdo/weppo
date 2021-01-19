@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <%- include('meta') %>
+  <script src="/scripts/init.js"></script>
+  <script src="/scripts/data.js"></script>
+  <script src="/scripts/action.js"></script>
+  <title id="title"></title>
+</head>
+<body>
+  <a href="/list/item">Up</a>
+  <div>Hi <%= user %></div>
+  <div style="font-size:20px"><span id="itemName"></span></div>
+  <form action="" id="itemUpdate">
+    <label for="name">New name</label>
+    <input type="text" name="name">
+    <div>Price: <span id="itemPrice"></span>$</div>
+    <div>
+    <label for="price">New price</label>
+    <input type="number" name="price">
+    </div>
+    <div>Amount: <span id="itemAmount"></span></div>
+    <div>
+    <label for="amount">Amount</label>
+    <input type="number" name="amount">
+    </div>
+    <div>
+    <label for="available">Available</label>
+    <input id="available" type="checkbox" name="available" checked="">
+    </div>
+    <div>
+    <label for="visible">Visible</label>
+    <input id="visible" type="checkbox" name="visible" checked="">
+    </div>
+  </form>
+  </form>
+  <button onclick="buttonUpdateItem(<%= itemID %>)">Update</button>
+  <script>document.onload=insertItemUpdate("<%= itemID %>")</script>
+</body>
+</html>
