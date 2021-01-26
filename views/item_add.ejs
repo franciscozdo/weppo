@@ -8,7 +8,9 @@
   <title>weppo - item add</title>
 </head>
 <body>
-  <div>Hi <%= user %></div>
+  <%- include('header') %>
+  <main class="flex-shrink-0">
+  <div>Hi <%= username %></div>
   <div id="console">
   <form action="" id="itemAdd">
     <div>
@@ -30,5 +32,8 @@
   </form>
   <button onclick="addItem()">Add item</button>
   </div>
+  </main>
+
+  <%- include('footer') %>
 </body>
 </html>

@@ -8,10 +8,14 @@
   <title>weppo - orders</title>
 </head>
 <body>
-  <h1>Order for user <%= user %></h1>
+  <%- include('header') %>
+  <main class="flex-shrink-0">
+  <h1>Orders for user <%= username %></h1>
   <ul id="itemList"></ul>
+  </main>
+  <%- include('footer') %>
   <script>
-    document.onload = insertOrderList(<%= user %>);
+    document.onload = insertOrderList(<%= username %>);
   </script>
 </body>
 </html>

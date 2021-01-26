@@ -8,6 +8,8 @@
   <title id="title"></title>
 </head>
 <body>
+  <%- include('header') %>
+  <main class="flex-shrink-0">
   <a href="/list/item">Up</a>
   <div id="item">
     <div style="font-size:20px"><span id="itemName"></span></div>
@@ -16,6 +18,8 @@
     <div>This item is <span id="itemAvailable"></span>.</div>
     <div><button onclick="buttonAddToCart(<%= itemID %>)">Add to cart</button>
   </div>
+  </main>
+  <%- include('footer') %>
   <script>document.onload = insertItem(<%= itemID %>)</script>
 </body>
 </html>

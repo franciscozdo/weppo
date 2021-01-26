@@ -354,6 +354,7 @@ app.get('/register', skipLogin, async (req, res) => {
   res.render('register', {
     'serverTime': Now(),
     'username': '',
+    'userID': '',
     'info': [],
     'warnings': []
   });
@@ -379,6 +380,7 @@ app.post('/register', skipLogin, async (req, res) => {
     res.render('register', {
       'serverTime': Now(),
       'username': '',
+      'userID': '',
       'info': [],
       'warnings': ['Data are not correct.']
     });
@@ -391,6 +393,7 @@ app.post('/register', skipLogin, async (req, res) => {
     res.render('register', {
       'serverTime': Now(),
       'username': '',
+      'userID': '',
       'info': [],
       'warnings': [`${email} is already used.`]
     });
@@ -400,6 +403,7 @@ app.post('/register', skipLogin, async (req, res) => {
     res.render('register', {
       'serverTime': Now(),
       'username': email,
+      'userID': user_id,
       'info': [`Success - your user id is ${user_id}.`],
       'warnings': []
     });
@@ -412,6 +416,7 @@ app.get('/login', skipLogin, async (req, res) => {
   res.render('login', {
     'serverTime': Now(),
     'username': '',
+    'userID': '',
     'info': [],
     'warnings': []
   });
@@ -427,6 +432,7 @@ app.post('/login', skipLogin, async (req, res) => {
     res.render('login', {
       'serverTime': Now(),
       'username': '',
+      'userID': '',
       'info': [],
       'warnings': [`${email} doesn't exist.`]
     });
@@ -438,19 +444,21 @@ app.post('/login', skipLogin, async (req, res) => {
     res.render('login', {
       'serverTime': Now(),
       'username': '',
+      'userID': '',
       'info': [],
       'warnings': [`Password mismatch.`]
     });
     return;
   }
 
-  req.session.user = email;
-  req.session.user_id = user.id;
   let user_id = user.id;
+  req.session.user = email;
+  req.session.user_id = user_id;
 
   res.render('login', {
     'serverTime': Now(),
     'username': email,
+    'userID': user_id,
     'info': [`Success - your user id is ${user_id}.`],
     'warnings': []
   });
@@ -926,19 +934,34 @@ app.get('/api/v1/order/list/:order_id', requireLogin, async (req, res) => {
 
 app.get('/', async (req, res) => {
   let user = '';
-  if ('user' in req.session)
+  let user_id;
+  if ('user' in req.session) {
     user = req.session.user;
+    user_id = req.session.user_id;
+  }
 
   res.render('index', {
     'serverTime': Now(),
     'username': user,
+    'userID': user_id,
     'info': [],
     'warnings': []
   });
 });
 
 app.get('/list/item', async (req, res) => {
-  res.render('item_list', {});
+  let user = '';
+  let user_id = '';
+  if ('user' in req.session) {
+    user = req.session.user;
+    user_id = req.session.user_id;
+  }
+
+  res.render('item_list', {
+    'serverTime': Now(),
+    'username': user,
+    'userID': user_id
+  });
 });
 
 app.get('/item/:id', async (req, res) => {
@@ -946,14 +969,26 @@ app.get('/item/:id', async (req, res) => {
     res.status(400).end('invalid id');
     return;
   }
+  let user = '';
+  let user_id = '';
+  if ('user' in req.session) {
+    user = req.session.user;
+    user_id = req.session.user_id;
+  }
 
-  res.render('item', {itemID: req.params.id});
+  res.render('item', {
+    'serverTime': Now(),
+    'itemID': req.params.id,
+    'username': user,
+    'userID': user_id
+  });
 });
 
 app.get('/add/item', requireAdmin, async (req, res) => {
   res.render('item_add', {
-    user: req.session.user,
-    userID: req.session.user_id
+    'serverTime': Now(),
+    'username': req.session.user,
+    'userID': req.session.user_id
   });
 });
 
@@ -964,17 +999,19 @@ app.get('/update/item/:id', requireAdmin, async (req, res) => {
   }
 
   res.render('item_update', {
-    user: req.session.user,
-    userID: req.session.user_id,
-    itemID: req.params.id
+    'serverTime': Now(),
+    'username': req.session.user,
+    'userID': req.session.user_id,
+    'itemID': req.params.id
   });
 });
 
 /* list of discounts with actions add and delete */
 app.get('/discounts', requireAdmin, async (req, res) => {
   res.render('discounts', {
-    user: req.session.user,
-    userID: req.session.user_id
+    'serverTime': Now(),
+    'username': req.session.user,
+    'userID': req.session.user_id
   });
 });
 
@@ -985,16 +1022,18 @@ app.get('/order/:id', requireLogin, async (req, res) => {
   }
 
   res.render('order', {
-    user: req.session.user,
-    userID: req.session.user_id,
-    orderID: req.params.id
+    'serverTime': Now(),
+    'username': req.session.user,
+    'userID': req.session.user_id,
+    'orderID': req.params.id
   });
 });
 
 app.get('/orders', requireLogin, async (req, res) => {
   res.render('orders', {
-    user: req.session.user,
-    userID: req.session.user_id
+    'serverTime': Now(),
+    'username': req.session.user,
+    'userID': req.session.user_id
   });
 });
 

@@ -86,15 +86,15 @@ function deleteDiscount(discount_id, success, fail) {
 }
 
 function createOrder(success, fail) {
-  request("PUT", `/api/v1/order/create	`, success, fail);
+  request("PUT", `/api/v1/order/create`, success, fail);
 }
 
-function orderAddItem(order_id, item_id, success, fail) {
-  request("PUT", `/api/v1/order/add/${order_id}/${item_id}`, success, fail);
+function orderAddItem(item_id, success, fail) {
+  request("PUT", `/api/v1/order/add/${item_id}`, success, fail);
 }
 
-function orderDeleteItem(order_id, item_order_id, success, fail) {
-  request("DELETE", `/api/v1/order/delete/${order_id}/${item_order_id}`, success, fail);
+function orderDeleteItem(item_order_id, success, fail) {
+  request("DELETE", `/api/v1/order/delete/${item_order_id}`, success, fail);
 }
 
 /* return list of orders */
@@ -102,8 +102,8 @@ function getUserOrders(user_id, success, fail) {
   request("GET", `/api/v1/order/user/${user_id}/list`, success, fail);
 }
 
-function payOrder(order_id, success, fail) {
-  request("PUT", `/api/v1/order/${order_id}/pay`, success, fail);
+function payOrder(success, fail) {
+  request("PUT", `/api/v1/order/pay`, success, fail);
 }
 
 /* return list of items */

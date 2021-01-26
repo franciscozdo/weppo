@@ -8,8 +8,10 @@
   <title id="title"></title>
 </head>
 <body>
+  <%- include('header') %>
+  <main class="flex-shrink-0">
   <a href="/list/item">Up</a>
-  <div>Hi <%= user %></div>
+  <div>Hi <%= username %></div>
   <div style="font-size:20px"><span id="itemName"></span></div>
   <form action="" id="itemUpdate">
     <label for="name">New name</label>
@@ -34,6 +36,8 @@
     </div>
   </form>
   <button onclick="buttonUpdateItem(<%= itemID %>)">Update</button>
+  </main>
+  <%- include('footer') %>
   <script>document.onload=insertItemUpdate(<%= itemID %>)</script>
 </body>
 </html>

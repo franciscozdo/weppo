@@ -8,8 +8,12 @@
   <title>weppo - order <%= orderID %></title>
 </head>
 <body>
+  <%- include('header') %>
+  <main class="flex-shrink-0">
   <h1>Order <%= orderID %></h1>
   <ul id="orderItemList"></ul>
+  </main>
+  <%- include('footer') %>
   <script>
     document.onload = insertOrderItems(<%= orderID %>);
   </script>

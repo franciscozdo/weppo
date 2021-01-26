@@ -8,8 +8,12 @@
   <title>weppo - items</title>
 </head>
 <body>
+  <%- include('header') %>
+  <main class="flex-shrink-0">
   <h1>Items</h1>
   <ul id="itemList"></ul>
+  </main>
+  <%- include('footer') %>
   <script>
     document.onload = insertItemList();
   </script>
