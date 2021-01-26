@@ -4,29 +4,19 @@
     <title>weppo - login</title>
   </head>
 
-  <body class="d-flex flex-column h-100">
+  <body>
     <%- include('header') %>
 
-    <main class="flex-shrink-0">
-        <div class="container">
-            <h3 class="mt-5">Register</h1>
-            <form method="POST">
-                <div class="form-group col-sm-3 my-1">
-                    <label for="email">E-mail</label>
-                    <input name="email" type="email" class="form-control">
-                </div>
-                <div class="form-group col-sm-3 my-1">
-                    <label for="passwd">Password</label>
-                    <input name="passwd" type="password" class="form-control">
-                </div>
-                <button type="submit" class="btn btn-primary">Sign in</button>
-            </form>
-
-            <a href="/register" class="btn btn-primary active">
-                Sign up
-            </a>
+    <main class="content">
+        <div class="login-form">
+          <p style="font-size:35px">Log In</p>
+          <form method="POST">
+            <div><input name="email" type="email" placeholder="E-mail"></div>
+            <div><input name="passwd" type="password" placeholder="Password"></div>
+            <div class="enter-button"><button type="submit">Log In</button></div>
+          </form>
         </div>
-
+<!--
         <div class="container">
             <% for (let i = 0; i < info.length; i++) { %>
                 <div class="alert alert-info" role="alert">
@@ -39,6 +29,7 @@
                 </div>
             <% } %>
         </div>
+-->
     </main>
 
     <%- include('footer') %>

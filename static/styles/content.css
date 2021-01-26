@@ -1,0 +1,68 @@
+main {
+  margin-top: 50px;
+  margin-bottom: 10px;
+  padding: 5%;
+  overflow: hidden;
+}
+
+#content {
+  word-break: auto;
+}
+
+#content .columns {
+  overflow: hidden;
+}
+
+#content .column2 {
+  width: 48%;
+  padding: 1%;
+  float: left;
+}
+
+.login-form {
+  text-align: center;
+  justify-content: center;
+}
+
+.enter-button {
+  text-align: center;
+  padding: 20px;
+}
+
+#register-form {
+  text-align: center;
+}
+
+.center {
+  text-align: center;
+}
+
+.welcome h1 {
+  text-align: center;
+  font-size: 70px;
+  margin-bottom: 0;
+}
+
+.welcome h4 {
+  margin-top: 0;
+  text-align: center;
+  color: grey;
+  font-size: 15px;
+}
+
+.description {
+  margin-left:3%;
+  margin-right:3%;
+}
+
+.description p {
+  margin: 0;
+  margin-top: 5px;
+}
+
+.description h1 {
+  margin-bottom: 0;
+  text-align: left;
+  font-size: 25px;
+  color: DimGray;
+}
