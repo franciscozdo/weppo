@@ -4,14 +4,15 @@
   <%- include('meta') %>
   <script src="/scripts/ajax.js"></script>
   <script src="/scripts/common.js"></script>
-  <script src="/scripts/item.js"></script>
-  <title>weppo - items</title>
+  <script src="/scripts/order.js"></script>
+  <title>weppo - orders</title>
 </head>
 <body>
-  <h1>Items</h1>
+  <h1>Order for user <%= user %></h1>
   <ul id="itemList"></ul>
   <script>
-    document.onload = insertItemList();
+    document.onload = insertOrderList(<%= user %>);
   </script>
 </body>
 </html>
+

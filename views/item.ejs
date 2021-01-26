@@ -2,8 +2,9 @@
 <html>
 <head>
   <%- include('meta') %>
-  <script src="/scripts/init.js"></script>
-  <script src="/scripts/data.js"></script>
+  <script src="/scripts/ajax.js"></script>
+  <script src="/scripts/common.js"></script>
+  <script src="/scripts/item.js"></script>
   <title id="title"></title>
 </head>
 <body>
@@ -13,7 +14,8 @@
     <div>Price: <span id="itemPrice"></span>$</div>
     <div>Amount: <span id="itemAmount"></span> pcs.</div>
     <div>This item is <span id="itemAvailable"></span>.</div>
+    <div><button onclick="buttonAddToCart(<%= itemID %>)">Add to cart</button>
   </div>
-  <script>document.onload = insertItem("<%= itemID %>")</script>
+  <script>document.onload = insertItem(<%= itemID %>)</script>
 </body>
 </html>

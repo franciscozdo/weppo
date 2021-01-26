@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <%- include('meta') %>
+  <script src="/scripts/ajax.js"></script>
+  <script src="/scripts/common.js"></script>
+  <script src="/scripts/order.js"></script>
+  <title>weppo - order <%= orderID %></title>
+</head>
+<body>
+  <h1>Order <%= orderID %></h1>
+  <ul id="orderItemList"></ul>
+  <script>
+    document.onload = insertOrderItems(<%= orderID %>);
+  </script>
+</body>
+</html>
+

@@ -10,6 +10,7 @@ const app = express();
 /* XXX: useful constants */
 const kSessionSecret = '\057\108\181\205\180\139\139\235\213\216';
 const kViewsDir = './views';
+const kServerPort = 5321;
 const kDbHost = 'localhost';
 const kDbPort = 5432;
 const kDbUser = 'weppo';
@@ -33,7 +34,7 @@ app.set('trust proxy', 'loopback');
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(express.static('static'))
 
-/* let's use in memory storage */ 
+/* let's use in memory storage */
 app.use(session({
   secret: kSessionSecret,
   resave: true,
@@ -133,7 +134,7 @@ class User {
     this.address = address;
     let res = await handle.query(this.sqlInsert, [this.email, this.passwd, this.name, this.address])
     await handle.release();
-    
+
     let row = res.rows;
     if (row.length == 1) {
       this.id = row[0]['id'];
@@ -149,7 +150,7 @@ class User {
   Admin = async function() {
     if (await this.Find() == false)
       return false;
-    
+
     return this.roles.includes(kAdminRole);
   }
 }
@@ -178,7 +179,7 @@ class Item {
 
   Find = async function() {
     let handle = await this.db.connect();
-    let res = await handle.query(this.sqlFind, [this.id]); 
+    let res = await handle.query(this.sqlFind, [this.id]);
     await handle.release();
 
     let row = res.rows;
@@ -207,7 +208,7 @@ class Item {
 
     let res = await handle.query(this.sqlInsert, [this.name, this.price, this.amount, this.available, this.hidden])
     await handle.release();
-    
+
     let row = res.rows;
     if (row.length == 1) {
       this.id = row[0]['id'];
@@ -296,7 +297,7 @@ class Order {
     this.sqlFind = 'SELECT id, user_id, paid FROM orders WHERE id=$1';
     this.sqlInsert = 'INSERT INTO orders (user_id, paid) VALUES ($1, $2) RETURNING id';
   }
-  
+
   Update = async function() {
     /* let's assume that this is a _valid_ order */
     let handle = await this.db.connect();
@@ -515,7 +516,7 @@ app.put('/api/v1/item/add', requireAdmin, express.json(), async (req, res) => {
 
   let item = new Item(db, /* id */ -1);
   let item_id = await item.Insert(req.body.name, req.body.price, req.body.amount, req.body.available, req.body.hidden);
-  
+
   if (item_id == -1) {
     res.status(500).end('internal error');
     return;
@@ -534,6 +535,7 @@ async function validateItemUpdate(req) {
 }
 
 app.put('/api/v1/item/update', requireAdmin, express.json(), async (req, res) => {
+  console.log(req.body);
   if (await validateItemUpdate(req.body) == false) {
     res.status(400).end('data mismatch');
     return;
@@ -574,6 +576,32 @@ app.get('/api/v1/item/list', async (req, res) => {
   res.json(items);
 });
 
+app.get('/api/v1/item/:item_id', async (req, res) => {
+  if (isNaN(Number(req.params.item_id))) {
+    res.status(400).end('invalid id');
+    return;
+  }
+
+  let item_id = req.params.item_id;
+  let handle = await db.connect();
+  let ret = await handle.query(`SELECT id, name, price, amount, available, hidden FROM items WHERE id=${item_id}`);
+  await handle.release();
+
+  if (ret.rows.length == 0) {
+    res.status(404).end('item not found');
+    return;
+  }
+  let item = {
+      'id': ret.rows[0]['id'],
+      'name': ret.rows[0]['name'],
+      'price': ret.rows[0]['price'],
+      'amount': ret.rows[0]['amount'],
+      'available': ret.rows[0]['available'],
+      'hidden': ret.rows[0]['hidden']
+  };
+  res.json(item);
+});
+
 /* ------------------------------------------------------------------------- */
 
 async function validateDiscount(req) {
@@ -608,6 +636,11 @@ app.put('/api/v1/discount/add', requireAdmin, express.json(), async (req, res) =
 });
 
 app.delete('/api/v1/discount/delete/:discount_id', requireAdmin, async (req, res) => {
+  if (isNaN(Number(req.params.discount_id))) {
+    res.status(400).end('invalid id');
+    return;
+  }
+
   let discount = new Discount(db, req.params.discount_id);
 
   if (await discount.Find() == false) {
@@ -620,8 +653,13 @@ app.delete('/api/v1/discount/delete/:discount_id', requireAdmin, async (req, res
 });
 
 app.get('/api/v1/discount/list/:item_id', async (req, res) => {
+  if (isNaN(Number(req.params.item_id))) {
+    res.status(400).end('invalid id');
+    return;
+  }
+
   let item_id = req.params.item_id;
-  
+
   let handle = await db.connect();
   let ret = await handle.query('SELECT * FROM discounts WHERE item_id=$1', [item_id]);
   await handle.release();
@@ -651,8 +689,12 @@ app.put('/api/v1/order/create', requireLogin, async (req, res) => {
 });
 
 app.put('/api/v1/order/add/:order_id/:item_id', requireLogin, async (req, res) => {
+  if (isNaN(Number(req.params.item_id)) || isNaN(Number(req.params.order_id))) {
+    res.status(400).end('invalid id');
+    return;
+  }
   /* ughh... it's horrible... */
-  
+
   /* 1. find user - we already have called requireLogin so somebody _should_ exist */
   let user = new User(db, req.session.user);
   await user.Find();
@@ -698,7 +740,7 @@ app.put('/api/v1/order/add/:order_id/:item_id', requireLogin, async (req, res) =
   /* ok... it's time to add item into order */
   let stmt = 'INSERT INTO item_order (item_id, order_id) VALUES ($1, $2)';
   let handle = await db.connect();
-  
+
   await handle.query(stmt, [item.id, order.id]);
 
   item.amount--;
@@ -711,6 +753,11 @@ app.put('/api/v1/order/add/:order_id/:item_id', requireLogin, async (req, res) =
 });
 
 app.delete('/api/v1/order/delete/:order_id/:item_order_id', requireLogin, async (req, res) => {
+  if (isNaN(Number(req.params.order_id)) || isNaN(Number(req.params.item_order_id))) {
+    res.status(400).end('invalid id');
+    return;
+  }
+
   /* 1. find user - we already have called requireLogin so somebody _should_ exist */
   let user = new User(db, req.session.user);
   await user.Find();
@@ -813,6 +860,11 @@ app.put('/api/v1/order/:order_id/pay', requireLogin, async (req, res) => {
 });
 
 app.get('/api/v1/order/list/:order_id', requireLogin, async (req, res) => {
+  if (isNaN(Number(req.params.order_id))) {
+    res.status(400).end('invalid id');
+    return;
+  }
+
   /* 1. recv user */
   let user = new User(db, req.session.user);
   await user.Find();
@@ -864,7 +916,12 @@ app.get('/list/item', async (req, res) => {
 });
 
 app.get('/item/:id', async (req, res) => {
-  res.render('item', {'itemID': req.params.id});
+  if (isNaN(Number(req.params.id))) {
+    res.status(400).end('invalid id');
+    return;
+  }
+
+  res.render('item', {itemID: req.params.id});
 });
 
 app.get('/add/item', requireAdmin, async (req, res) => {
@@ -872,6 +929,11 @@ app.get('/add/item', requireAdmin, async (req, res) => {
 });
 
 app.get('/update/item/:id', requireAdmin, async (req, res) => {
+  if (isNaN(Number(req.params.id))) {
+    res.status(400).end('invalid id');
+    return;
+  }
+
   res.render('item_update', { user: req.session.user, itemID: req.params.id });
 });
 
@@ -880,4 +942,18 @@ app.get('/discounts', requireAdmin, async (req, res) => {
   res.render('discounts', {user: req.session.user });
 });
 
-http.createServer(app).listen(5321);
+app.get('/order/:id', requireLogin, async (req, res) => {
+  if (isNaN(Number(req.params.id))) {
+    res.status(400).end('invalid id');
+    return;
+  }
+
+  res.render('order', {user: req.session.user, orderID: req.params.id});
+});
+
+app.get('/orders', requireLogin, async (req, res) => {
+  res.render('orders', {user: req.session.user});
+});
+
+console.log(`Listening on localhost:${kServerPort}`);
+http.createServer(app).listen(kServerPort);
