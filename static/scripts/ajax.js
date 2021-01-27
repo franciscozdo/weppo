@@ -89,6 +89,11 @@ function createOrder(success, fail) {
   request("PUT", `/api/v1/order/create`, success, fail);
 }
 
+/* returns {id} */
+function getCurrentOrder(success, fail) {
+  request("GET", `/api/v1/order/get`, success, fail);
+}
+
 function orderAddItem(item_id, success, fail) {
   request("PUT", `/api/v1/order/add/${item_id}`, success, fail);
 }

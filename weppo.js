@@ -455,13 +455,7 @@ app.post('/login', skipLogin, async (req, res) => {
   req.session.user = email;
   req.session.user_id = user_id;
 
-  res.render('login', {
-    'serverTime': Now(),
-    'username': email,
-    'userID': user_id,
-    'info': [`Success - your user id is ${user_id}.`],
-    'warnings': []
-  });
+  res.redirect('/');
 });
 
 app.get('/logout', async (req, res) => {
@@ -688,6 +682,15 @@ app.get('/api/v1/discount/list/:item_id', async (req, res) => {
   }
 
   res.json(discounts);
+});
+
+app.get('/api/v1/order/get', requireLogin, async (req, res) => {
+  if (!('order_id' in req.session)) {
+    res.status(400).end('no current order');
+    return;
+  }
+
+  res.json({'id': req.session.order_id});
 });
 
 app.put('/api/v1/order/create', requireLogin, async (req, res) => {
@@ -1021,6 +1024,14 @@ app.get('/order/:id', requireLogin, async (req, res) => {
     return;
   }
 
+  let order = new Order(db, req.params.id);
+  await order.Find();
+
+  if (order.user_id != req.session.user_id) {
+    res.status(403).end('forbidden');
+    return;
+  }
+
   res.render('order', {
     'serverTime': Now(),
     'username': req.session.user,
@@ -1035,6 +1046,13 @@ app.get('/orders', requireLogin, async (req, res) => {
     'username': req.session.user,
     'userID': req.session.user_id
   });
+});
+
+app.get('/cart', requireLogin, async (req, res) => {
+  if ('order_id' in req.session)
+    res.redirect(`/order/${req.session.order_id}`);
+  else
+    res.end("Your cart is empty :(");
 });
 
 console.log(`Listening on localhost:${kServerPort}`);
