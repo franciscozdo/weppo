@@ -10,12 +10,17 @@
 <body>
   <%- include('header') %>
   <main class="content">
-  <h1>Orders for user <%= username %></h1>
-  <ul id="itemList"></ul>
+  <% if (admin) { %>
+  <h1>Orders of user <%= otherUserID %></h1>
+  <% } else { %>
+  <h1>Your orders</h1>
+  <% } %>
+  <ul id="orderList"></ul>
+  <div id="oops">Ooops... Nothing here</div>
   </main>
   <%- include('footer') %>
   <script>
-    document.onload = insertOrderList(<%= username %>);
+    document.onload = insertOrderList(<%= otherUserID %>);
   </script>
 </body>
 </html>

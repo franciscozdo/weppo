@@ -10,12 +10,17 @@
 <body>
   <%- include('header') %>
   <main class="content">
-  <h1>Order <%= orderID %></h1>
+  <h1>Order <%= orderID %> <% if(admin) { %> for user <%= otherUser %> <% } %> </h1>
   <ul id="orderItemList"></ul>
+  <% if (!paid) { %>
+  <button onclick="buttonPayOrder(<%= orderID %>)">Pay</button>
+  <% } else { %>
+  <div style="color:green">[paid]</div>
+  <% } %>
   </main>
   <%- include('footer') %>
   <script>
-    document.onload = insertOrderItems(<%= orderID %>);
+    document.onload = insertOrderItems(<%= orderID %>, <%= paid %>);
   </script>
 </body>
 </html>

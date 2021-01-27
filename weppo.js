@@ -479,9 +479,9 @@ async function requireAdmin(req, res, next) {
   res.status(403)
   res.render('error', {
     'serverTime': Now(),
-    'username': req.session.user,
-    'userID': req.session.user_id,
-    'admin':req.session.admin,
+    'username': '',
+    'userID': '',
+    'admin': false,
     'errorMsg': '403 Forbidden'
   });
 }
@@ -772,7 +772,7 @@ app.put('/api/v1/order/create', requireLogin, async (req, res) => {
   res.json({'id': order_id});
 });
 
-app.put('/api/v1/order/add/:item_id', requireLogin, async (req, res) => {
+app.put('/api/v1/order/add/:item_id/:amount', requireLogin, async (req, res) => {
   if (isNaN(Number(req.params.item_id))) {
     res.status(400).json({'status': 'invalid id'});
     return;
@@ -848,8 +848,8 @@ app.put('/api/v1/order/add/:item_id', requireLogin, async (req, res) => {
   res.json({'status': 'ok'});
 });
 
-app.delete('/api/v1/order/delete/:item_order_id', requireLogin, async (req, res) => {
-  if (isNaN(Number(req.params.item_order_id))) {
+app.delete('/api/v1/order/delete/:order_id/:item_order_id', requireLogin, async (req, res) => {
+  if (isNaN(Number(req.params.order_id)) || isNaN(Number(req.params.item_order_id))) {
     res.status(400).json({'status': 'invalid id'});
     return;
   }
@@ -859,12 +859,7 @@ app.delete('/api/v1/order/delete/:item_order_id', requireLogin, async (req, res)
   await user.Find();
 
   /* 2. find order */
-  if (!('order_id' in req.session)) {
-    res.status(400).json({'status': 'data mismatch'});
-    return;
-  }
-
-  let order = new Order(db, req.session.order_id);
+  let order = new Order(db, req.params.order_id);
   if (await order.Find() == false) {
     /* 2.1 order doesn't exist (we shouldn't get here) */
     res.status(400).json({'status': 'data mismatch'});
@@ -943,7 +938,7 @@ app.get('/api/v1/order/user/:user_id/list', requireLogin, async (req, res) => {
   res.json(orders);
 });
 
-app.put('/api/v1/order/pay', requireLogin, async (req, res) => {
+app.put('/api/v1/order/pay/:order_id', requireLogin, async (req, res) => {
   /* 1. recv user */
   let user = new User(db, req.session.user);
   await user.Find();
@@ -954,17 +949,20 @@ app.put('/api/v1/order/pay', requireLogin, async (req, res) => {
   }
 
   /* 2. check permission */
-  let order = new Order(db, req.session.order_id);
+  let order = new Order(db, req.params.order_id);
   if (await order.Find() == false) {
     res.status(400).json({'status': 'data mismatch'});
     return;
   }
+
   if (order.user_id != user.id) {
     res.status(400).json({'status': 'data mismatch'});
     return;
   }
 
   order.paid = true;
+  if ('order_id' in req.session && req.session.order_id == order.id)
+    delete req.session.order_id;
   await order.Update();
 
   res.end('ok');
@@ -1134,7 +1132,7 @@ app.get('/order/:id', requireLogin, async (req, res) => {
   let order = new Order(db, req.params.id);
   await order.Find();
 
-  if (order.user_id != req.session.user_id) {
+  if (!req.session.admin && order.user_id != req.session.user_id) {
     res.status(403)
     res.render('error', {
       'serverTime': Now(),
@@ -1150,11 +1148,14 @@ app.get('/order/:id', requireLogin, async (req, res) => {
     'serverTime': Now(),
     'username': req.session.user,
     'userID': req.session.user_id,
-      'admin': req.session.admin,
-    'orderID': req.params.id
+    'otherUser': order.user_id,
+    'admin': req.session.admin,
+    'orderID': order.id,
+    'paid': order.paid
   });
 });
 
+/* orders of current user */
 app.get('/orders', requireLogin, async (req, res) => {
   res.render('orders', {
     'serverTime': Now(),
@@ -1163,6 +1164,27 @@ app.get('/orders', requireLogin, async (req, res) => {
     'admin': req.session.admin
   });
 });
+
+app.get('/orders/all', requireAdmin, async (req, res) => {
+  res.render('all_orders', {
+    'serverTime': Now(),
+    'username': req.session.user,
+    'userID': req.session.user_id,
+    'admin': req.session.admin
+  });
+});
+
+/* list orders of other user */
+app.get('/orders/:id', requireAdmin, async (req, res) => {
+  res.render('orders', {
+    'serverTime': Now(),
+    'username': req.session.user,
+    'userID': req.session.user_id,
+    'otherUserID': req.params.id,
+    'admin': req.session.admin
+  });
+});
+
 
 app.get('/cart', requireLogin, async (req, res) => {
   if ('order_id' in req.session)

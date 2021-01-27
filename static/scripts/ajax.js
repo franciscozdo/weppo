@@ -7,11 +7,10 @@ function request(method, url, success, fail, data = null) {
         try {
           success(JSON.parse(xhttp.responseText));
         } catch (e) {
-          console.log("ok");
           success([]);
         }
       } else {
-        fail(xhttp.responseText);
+        fail(JSON.parse(xhttp.responseText));
       }
     }
   };
@@ -107,8 +106,8 @@ function getUserOrders(user_id, success, fail) {
   request("GET", `/api/v1/order/user/${user_id}/list`, success, fail);
 }
 
-function payOrder(success, fail) {
-  request("PUT", `/api/v1/order/pay`, success, fail);
+function payOrder(order_id, success, fail) {
+  request("PUT", `/api/v1/order/pay/${order_id}`, success, fail);
 }
 
 /* return list of items */
