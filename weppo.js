@@ -454,7 +454,7 @@ app.post('/login', skipLogin, async (req, res) => {
   let user_id = user.id;
   req.session.user = email;
   req.session.user_id = user_id;
-  req.session.admin = user.Admin();
+  req.session.admin = await user.Admin();
 
   res.redirect('/');
 });
@@ -470,7 +470,7 @@ app.get('/logout', async (req, res) => {
 /* ------------------------------------------------------------------------- */
 
 async function requireAdmin(req, res, next) {
-  if ('admin' in req.session) {
+  if ('user' in req.session) {
     if (req.session.admin) {
       next();
       return;
@@ -1012,6 +1012,47 @@ app.get('/api/v1/order/list/:order_id', requireLogin, async (req, res) => {
   res.json(items);
 });
 
+app.get('/api/v1/order/all', requireAdmin, async (req, res) => {
+  let sql = 'SELECT id, user_id, paid FROM orders';
+
+  let handle = await db.connect();
+  let ret = await handle.query(sql);
+  await handle.release();
+
+  let orders = [];
+  for (let i = 0; i < ret.rows.length; ++i) {
+    orders.push({
+      'id': ret.rows[i]['id'],
+      'user_id': ret.rows[i]['user_id'],
+      'paid': ret.rows[i]['paid']
+    });
+  }
+  res.json(orders);
+});
+
+app.get('/api/v1/order/:order_id/price', requireLogin, async (req, res) => {
+  if (isNaN(Number(req.params.order_id))) {
+    res.status(400).json({'status': 'invalid id'});
+    return;
+  }
+//  let sql = 'SELECT items.price, item_order.amount ' +
+//    'FROM orders' +
+//    'JOIN item_order ON orders.id = item_order.order_id ' +
+//    'JOIN items ON item_order.item_id = items.id ' +
+//    'WHERE orders.id=$1;';
+
+let sql = 'SELECT items.price, item_order.amount FROM orders JOIN item_order ON orders.id = item_order.order_id JOIN items ON item_order.item_id = items.id WHERE orders.id=$1';
+  let handle = await db.connect();
+  let ret = await handle.query(sql, [req.params.order_id]);
+  await handle.release();
+
+  let sum = 0;
+  for (let i = 0; i < ret.rows.length; ++i) {
+    sum += Number(ret.rows[i]['price']) * Number(ret.rows[i]['amount']);
+  }
+  res.json({'price':sum});
+});
+
 /* ------------------------------------------------------------------------- */
 
 app.get('/', async (req, res) => {
@@ -1161,6 +1202,7 @@ app.get('/orders', requireLogin, async (req, res) => {
     'serverTime': Now(),
     'username': req.session.user,
     'userID': req.session.user_id,
+    'otherUserID': req.session.user_id,
     'admin': req.session.admin
   });
 });

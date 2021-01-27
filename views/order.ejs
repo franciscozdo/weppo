@@ -12,6 +12,7 @@
   <main class="content">
   <h1>Order <%= orderID %> <% if(admin) { %> for user <%= otherUser %> <% } %> </h1>
   <ul id="orderItemList"></ul>
+  <div>Price: <span id="price"></span></div>
   <% if (!paid) { %>
   <button onclick="buttonPayOrder(<%= orderID %>)">Pay</button>
   <% } else { %>
@@ -20,7 +21,8 @@
   </main>
   <%- include('footer') %>
   <script>
-    document.onload = insertOrderItems(<%= orderID %>, <%= paid %>);
+    insertOrderItems(<%= orderID %>, <%= paid %>);
+    insertPrice(<%= orderID %>);
   </script>
 </body>
 </html>

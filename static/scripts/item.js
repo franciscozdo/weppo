@@ -41,27 +41,29 @@ function insertItemUpdate(id) {
   getItemById(id, success, notFound);
 }
 
-function createItemListNode(item) {
+function createItemListNode(item, admin) {
   let li = document.createElement("li");
   let name = document.createElement("a");
   name.innerText = item.name;
   name.setAttribute("href", `/item/${item.id}`);
   let span = document.createElement("span");
   span.innerText = ` [price: ${item.price}$] [amount: ${item.amount}] `
-  let mod = document.createElement("a");
-  mod.innerText = "Modify";
-  mod.setAttribute("href", `/update/item/${item.id}`);
   li.appendChild(name);
   li.appendChild(span);
-  li.appendChild(mod);
+  if (admin) {
+    let mod = document.createElement("a");
+    mod.innerText = "Modify";
+    mod.setAttribute("href", `/update/item/${item.id}`);
+    li.appendChild(mod);
+  }
   return li;
 }
 
-function insertItemList() {
+function insertItemList(admin) {
   function success(items) {
     items.sort((a, b) => {return a.id - b.id});
     for (item of items) {
-      append("itemList", createItemListNode(item));
+      append("itemList", createItemListNode(item, admin));
     }
   }
   getItemList(success, console.log);

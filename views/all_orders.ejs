@@ -4,18 +4,20 @@
   <%- include('meta') %>
   <script src="/scripts/ajax.js"></script>
   <script src="/scripts/common.js"></script>
-  <script src="/scripts/item.js"></script>
-  <title>weppo - items</title>
+  <script src="/scripts/order.js"></script>
+  <title>weppo - orders</title>
 </head>
 <body>
   <%- include('header') %>
   <main class="content">
-  <h1>Items</h1>
-  <ul id="itemList"></ul>
+  <h1>All orders</h1>
+  <ul id="orderList"></ul>
+  <div id="oops">Ooops... Nothing here</div>
   </main>
   <%- include('footer') %>
   <script>
-    document.onload = insertItemList(<%= admin %>);
+    document.onload = insertAllOrders();
   </script>
 </body>
 </html>
+

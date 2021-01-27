@@ -6,6 +6,7 @@ function createOrderListNode(order) {
   let name = document.createElement("a");
   name.innerText = order.id;
   name.setAttribute("href", `/order/${order.id}`);
+  let price = document.createElement("span");
   let paid;
   if (order.paid) {
     paid = document.createElement("span");
@@ -59,7 +60,7 @@ function insertOrderItems(order_id, paid) {
   function success(items) {
     items.sort((a, b) => {return a.id - b.id});
     for (item of items) {
-        append("orderItemList", createItemListNode(item, order_id, paid));
+      append("orderItemList", createItemListNode(item, order_id, paid));
     }
   }
   function fail(res) {
@@ -69,6 +70,48 @@ function insertOrderItems(order_id, paid) {
   }
   getOrderItems(order_id, success, fail);
 }
+
+function createAllOrderListNode(order) {
+  let li = document.createElement("li");
+  li.setAttribute("id", `item${order.id}`);
+  let name = document.createElement("a");
+  name.innerText = order.id;
+  name.setAttribute("href", `/order/${order.id}`);
+  let user = document.createElement("span");
+  user.innerText = ` for user ${order.user_id} `;
+  let paid = document.createElement("span");
+  if (order.paid) {
+    paid.innerText = " [paid]"
+    paid.setAttribute("style", "color:green");
+  } else {
+    paid.innerText = " [not paid]"
+    paid.setAttribute("style", "color:red");
+  }
+  li.appendChild(name);
+  li.appendChild(user);
+  li.appendChild(paid);
+  return li;
+}
+
+function insertAllOrders() {
+  function success(orders) {
+    for (order of orders) {
+      append("orderList", createAllOrderListNode(order));
+    }
+    if (orders.length > 0) {
+      document.getElementById("oops").remove();
+    }
+  }
+  getAllOrders(success, console.log);
+}
+
+function insertPrice(order_id) {
+  function success(price) {
+    document.getElementById("price").innerText = price.price;
+  }
+  getOrderPrice(order_id, success, console.log);
+}
+
 
 /* ACTIONS */
 function buttonAddToCart(item_id) {

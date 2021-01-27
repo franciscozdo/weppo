@@ -115,6 +115,14 @@ function getOrderItems(order_id, success, fail) {
   request("GET", `/api/v1/order/list/${order_id}`, success, fail);
 }
 
+function getAllOrders(success, fail) {
+  request("GET", `/api/v1/order/all`, success, fail);
+}
+
+function getOrderPrice(order_id, success, fail) {
+  request("GET", `/api/v1/order/${order_id}/price`, success, fail);
+}
+
 /* future */
 //function getCurrentOrder(success, failure) {
 //  request("", ``, success, failure);
