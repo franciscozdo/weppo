@@ -43,13 +43,17 @@ function insertItemUpdate(id) {
 
 function createItemListNode(item) {
   let li = document.createElement("li");
-  let a1 = document.createElement("a");
-  a1.innerText = item.name;
-  a1.setAttribute("href", `/item/${item.id}`);
+  let name = document.createElement("a");
+  name.innerText = item.name;
+  name.setAttribute("href", `/item/${item.id}`);
   let span = document.createElement("span");
   span.innerText = ` [price: ${item.price}$] [amount: ${item.amount}] `
-  li.appendChild(a1);
+  let mod = document.createElement("a");
+  mod.innerText = "Modify";
+  mod.setAttribute("href", `/update/item/${item.id}`);
+  li.appendChild(name);
   li.appendChild(span);
+  li.appendChild(mod);
   return li;
 }
 

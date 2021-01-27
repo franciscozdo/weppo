@@ -21,9 +21,11 @@
       <button onclick="buttonAddToCart(<%= itemID %>)">Add to cart</button>
       <input type="number" name="amount" id="orderAmount" min="1" value="1" style="width:50px"/>
     </div>
+    <% if (admin) { %>
     <div>
       <a href="/update/item/<%= itemID %>">Modify</a>
     </div>
+    <% } %>
   </div>
   </main>
   <%- include('footer') %>

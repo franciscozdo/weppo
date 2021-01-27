@@ -454,6 +454,7 @@ app.post('/login', skipLogin, async (req, res) => {
   let user_id = user.id;
   req.session.user = email;
   req.session.user_id = user_id;
+  req.session.admin = user.Admin();
 
   res.redirect('/');
 });
@@ -462,15 +463,15 @@ app.get('/logout', async (req, res) => {
   delete req.session.user;
   delete req.session.user_id;
   delete req.session.order_id;
+  delete req.session.admin;
   res.redirect('/');
 });
 
 /* ------------------------------------------------------------------------- */
 
 async function requireAdmin(req, res, next) {
-  if ('user' in req.session) {
-    let user = new User(db, req.session.user);
-    if (await user.Admin()) {
+  if ('admin' in req.session) {
+    if (req.session.admin) {
       next();
       return;
     }
@@ -480,6 +481,7 @@ async function requireAdmin(req, res, next) {
     'serverTime': Now(),
     'username': req.session.user,
     'userID': req.session.user_id,
+    'admin':req.session.admin,
     'errorMsg': '403 Forbidden'
   });
 }
@@ -494,6 +496,7 @@ async function requireLogin(req, res, next) {
     'serverTime': Now(),
     'username': '',
     'userID': '',
+    'admin': false,
     'errorMsg': '403 Forbidden'
   });
 }
@@ -1015,16 +1018,19 @@ app.get('/api/v1/order/list/:order_id', requireLogin, async (req, res) => {
 
 app.get('/', async (req, res) => {
   let user = '';
-  let user_id;
+  let user_id = '';
+  let admin = false;
   if ('user' in req.session) {
     user = req.session.user;
     user_id = req.session.user_id;
+    admin = req.session.admin;
   }
 
   res.render('index', {
     'serverTime': Now(),
     'username': user,
     'userID': user_id,
+    'admin': admin,
     'info': [],
     'warnings': []
   });
@@ -1033,15 +1039,18 @@ app.get('/', async (req, res) => {
 app.get('/list/item', async (req, res) => {
   let user = '';
   let user_id = '';
+  let admin = false;
   if ('user' in req.session) {
     user = req.session.user;
     user_id = req.session.user_id;
+    admin = req.session.admin;
   }
 
   res.render('item_list', {
     'serverTime': Now(),
     'username': user,
-    'userID': user_id
+    'userID': user_id,
+    'admin': admin
   });
 });
 
@@ -1052,16 +1061,19 @@ app.get('/item/:id', async (req, res) => {
   }
   let user = '';
   let user_id = '';
+  let admin = false;
   if ('user' in req.session) {
     user = req.session.user;
     user_id = req.session.user_id;
+    admin = req.session.admin;
   }
 
   res.render('item', {
     'serverTime': Now(),
     'itemID': req.params.id,
     'username': user,
-    'userID': user_id
+    'userID': user_id,
+    'admin': admin
   });
 });
 
@@ -1069,7 +1081,8 @@ app.get('/add/item', requireLogin, requireAdmin, async (req, res) => {
   res.render('item_add', {
     'serverTime': Now(),
     'username': req.session.user,
-    'userID': req.session.user_id
+    'userID': req.session.user_id,
+    'admin': req.session.admin
   });
 });
 
@@ -1080,6 +1093,7 @@ app.get('/update/item/:id', requireLogin, requireAdmin, async (req, res) => {
       'serverTime': Now(),
       'username': req.session.user,
       'userID': req.session.user_id,
+      'admin': req.session.admin,
       'errorMsg': 'Id must be a number'
     });
     return;
@@ -1089,6 +1103,7 @@ app.get('/update/item/:id', requireLogin, requireAdmin, async (req, res) => {
     'serverTime': Now(),
     'username': req.session.user,
     'userID': req.session.user_id,
+    'admin': req.session.admin,
     'itemID': req.params.id
   });
 });
@@ -1098,7 +1113,8 @@ app.get('/discounts', requireLogin, requireAdmin, async (req, res) => {
   res.render('discounts', {
     'serverTime': Now(),
     'username': req.session.user,
-    'userID': req.session.user_id
+    'userID': req.session.user_id,
+    'admin': req.session.admin,
   });
 });
 
@@ -1109,6 +1125,7 @@ app.get('/order/:id', requireLogin, async (req, res) => {
       'serverTime': Now(),
       'username': req.session.user,
       'userID': req.session.user_id,
+      'admin': req.session.admin,
       'errorMsg': 'Id must be a number'
     });
     return;
@@ -1123,6 +1140,7 @@ app.get('/order/:id', requireLogin, async (req, res) => {
       'serverTime': Now(),
       'username': req.session.user,
       'userID': req.session.user_id,
+      'admin': req.session.admin,
       'errorMsg': 'Forbidden'
     });
     return;
@@ -1132,6 +1150,7 @@ app.get('/order/:id', requireLogin, async (req, res) => {
     'serverTime': Now(),
     'username': req.session.user,
     'userID': req.session.user_id,
+      'admin': req.session.admin,
     'orderID': req.params.id
   });
 });
@@ -1140,7 +1159,8 @@ app.get('/orders', requireLogin, async (req, res) => {
   res.render('orders', {
     'serverTime': Now(),
     'username': req.session.user,
-    'userID': req.session.user_id
+    'userID': req.session.user_id,
+    'admin': req.session.admin
   });
 });
 
@@ -1152,6 +1172,7 @@ app.get('/cart', requireLogin, async (req, res) => {
       'serverTime': Now(),
       'username': req.session.user,
       'userID': req.session.user_id,
+      'admin': req.session.admin,
       'errorMsg': 'Your cart is empty :(' });
 });
 
