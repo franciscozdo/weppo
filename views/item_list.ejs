@@ -11,6 +11,9 @@
   <%- include('header') %>
   <main class="content">
   <h1>Items</h1>
+  <% if (admin) {%>
+  <a href="/add/item">+Add item</a>
+  <% } %>
   <ul id="itemList"></ul>
   </main>
   <%- include('footer') %>

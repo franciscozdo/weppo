@@ -63,7 +63,8 @@ function insertItemList(admin) {
   function success(items) {
     items.sort((a, b) => {return a.id - b.id});
     for (item of items) {
-      append("itemList", createItemListNode(item, admin));
+      if (!item.hidden || admin)
+        append("itemList", createItemListNode(item, admin));
     }
   }
   getItemList(success, console.log);
