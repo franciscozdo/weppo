@@ -488,6 +488,22 @@ async function requireLogin(req, res, next) {
 
 /* ------------------------------------------------------------------------- */
 
+app.get('/api/v1/user/me', requireLogin, async (req, res) => {
+  let user_id = req.session['user_id'];
+  let user = new User(db, '');
+  if (await user.FindById(user_id)) {
+    res.json({
+      'id': user.id,
+      'email': user.email,
+      'name': user.name,
+      'address': user.address,
+      'roles': user.roles
+    });
+  } else {
+    res.status(404).json({"status": "not found"});
+  }
+});
+
 app.get('/api/v1/user/by_id/:user_id', requireAdmin, async (req, res) => {
   let user = new User(db, '');
   if (await user.FindById(req.params.user_id)) {
