@@ -1,7 +1,8 @@
 /* INITIALIZATION */
 
 function notFound(msg) {
-  document.write(msg);
+  insert("title", "weppo - Not found.");
+  insert("item", "Item not found.");
 }
 
 function insertItem(id) {
@@ -11,13 +12,12 @@ function insertItem(id) {
       insert("itemName", item.name);
       insert("itemPrice", item.price);
       insert("itemAmount", item.amount);
-      if (item.available)
+      if (item.available && item.amount > 0) {
         insert("itemAvailable", "available");
-      else
+      } else {
         insert("itemAvailable", "not available");
-    } else {
-      insert("title", "weppo - Not found.");
-      insert("item", "Item not found.");
+        document.getElementById("addToCart").remove();
+      }
     }
   }
   getItemById(id, success, notFound);
@@ -46,14 +46,10 @@ function createItemListNode(item) {
   let a1 = document.createElement("a");
   a1.innerText = item.name;
   a1.setAttribute("href", `/item/${item.id}`);
-  let a2 = document.createElement("a");
-  a2.innerText = "Modify"
-  a2.setAttribute("href", `/update/item/${item.id}`);
   let span = document.createElement("span");
   span.innerText = ` [price: ${item.price}$] [amount: ${item.amount}] `
   li.appendChild(a1);
   li.appendChild(span);
-  li.appendChild(a2);
   return li;
 }
 

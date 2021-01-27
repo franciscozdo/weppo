@@ -475,7 +475,13 @@ async function requireAdmin(req, res, next) {
       return;
     }
   }
-  res.status(403).end('403');
+  res.status(403)
+  res.render('error', {
+    'serverTime': Now(),
+    'username': req.session.user,
+    'userID': req.session.user_id,
+    'errorMsg': '403 Forbidden'
+  });
 }
 
 async function requireLogin(req, res, next) {
@@ -483,19 +489,25 @@ async function requireLogin(req, res, next) {
     next();
     return;
   }
-  res.status(403).end('403');
+  res.status(403)
+  res.render('error', {
+    'serverTime': Now(),
+    'username': '',
+    'userID': '',
+    'errorMsg': '403 Forbidden'
+  });
 }
 
 /* ------------------------------------------------------------------------- */
 
-app.put('/api/v1/role/add/:role', requireAdmin, async (req, res) => {
+app.put('/api/v1/role/add/:role', requireLogin, requireAdmin, async (req, res) => {
   let handle = await db.connect();
   await handle.query('INSERT INTO roles (role) VALUES ($1) ON CONFLICT (role) DO NOTHING', [req.params.role]);
   await handle.release();
   res.end('ok');
 });
 
-app.put('/api/v1/user/:user_id/role/add/:role_id', requireAdmin, async (req, res) => {
+app.put('/api/v1/user/:user_id/role/add/:role_id', requireLogin, requireAdmin, async (req, res) => {
   let handle = await db.connect();
   try {
     await handle.query('INSERT INTO user_role (user_id, role_id) VALUES ($1, $2)', [req.params.user_id, req.params.role_id]);
@@ -514,7 +526,7 @@ function validateItemAdd(req) {
   return ('name' in req && 'price' in req && 'amount' in req && 'available' in req && 'hidden' in req);
 }
 
-app.put('/api/v1/item/add', requireAdmin, express.json(), async (req, res) => {
+app.put('/api/v1/item/add', requireLogin, requireAdmin, express.json(), async (req, res) => {
   if (validateItemAdd(req.body) == false) {
     res.status(400).end('data mismatch');
     return;
@@ -540,7 +552,7 @@ async function validateItemUpdate(req) {
   return await item.Find();
 }
 
-app.put('/api/v1/item/update', requireAdmin, express.json(), async (req, res) => {
+app.put('/api/v1/item/update', requireLogin, requireAdmin, express.json(), async (req, res) => {
   console.log(req.body);
   if (await validateItemUpdate(req.body) == false) {
     res.status(400).end('data mismatch');
@@ -623,7 +635,7 @@ async function validateDiscount(req) {
   return true;
 }
 
-app.put('/api/v1/discount/add', requireAdmin, express.json(), async (req, res) => {
+app.put('/api/v1/discount/add', requireLogin, requireAdmin, express.json(), async (req, res) => {
   if (await validateDiscount(req.body) == false) {
     res.status(400).end('data mismatch');
     return;
@@ -641,7 +653,7 @@ app.put('/api/v1/discount/add', requireAdmin, express.json(), async (req, res) =
   res.json({ id: discount_id });
 });
 
-app.delete('/api/v1/discount/delete/:discount_id', requireAdmin, async (req, res) => {
+app.delete('/api/v1/discount/delete/:discount_id', requireLogin, requireAdmin, async (req, res) => {
   if (isNaN(Number(req.params.discount_id))) {
     res.status(400).end('invalid id');
     return;
@@ -780,8 +792,8 @@ app.put('/api/v1/order/add/:item_id/:amount', requireLogin, async (req, res) => 
   res.end('ok');
 });
 
-app.delete('/api/v1/order/delete/:item_order_id', requireLogin, async (req, res) => {
-  if (isNaN(Number(req.params.item_order_id))) {
+app.delete('/api/v1/order/delete/:order_id/:item_order_id', requireLogin, async (req, res) => {
+  if (isNaN(Number(req.params.order_id)) || isNaN(Number(req.params.item_order_id))) {
     res.status(400).end('invalid id');
     return;
   }
@@ -791,12 +803,7 @@ app.delete('/api/v1/order/delete/:item_order_id', requireLogin, async (req, res)
   await user.Find();
 
   /* 2. find order */
-  if (!('order_id' in req.session)) {
-    res.status(400).end('data mismatch');
-    return;
-  }
-
-  let order = new Order(db, req.session.order_id);
+  let order = new Order(db, req.params.order_id);
   if (await order.Find() == false) {
     /* 2.1 order doesn't exist (we shouldn't get here) */
     res.status(400).end('data mismatch');
@@ -823,6 +830,10 @@ app.delete('/api/v1/order/delete/:item_order_id', requireLogin, async (req, res)
 
   /* 6.1 update amount */
   let ret = await handle.query(sqlFind, [req.params.item_order_id]);
+  if (ret.rows.length == 0) {
+    res.status(400).end('data mismatch');
+    return;
+  }
   let item = new Item(db, ret.rows[0]['item_id']);
   let amount = ret.rows[0]['amount'];
   await item.Find();
@@ -830,7 +841,7 @@ app.delete('/api/v1/order/delete/:item_order_id', requireLogin, async (req, res)
   await item.Update();
 
   /* 6.2 delete old item */
-  await handle.query(sqlDelete, [ite.params.item_order_id]);
+  await handle.query(sqlDelete, [req.params.item_order_id]);
 
   await handle.release();
   res.end('ok');
@@ -932,7 +943,7 @@ app.get('/api/v1/order/list/:order_id', requireLogin, async (req, res) => {
   for (let i = 0; i < ret.rows.length; ++i) {
     items.push({
       'id': ret.rows[i]['id'],
-      'item_order_id': ret.rows[i]['id'],
+      'item_order_id': ret.rows[i]['item_order_id'],
       'name': ret.rows[i]['name'],
       'price': ret.rows[i]['price'],
       'amount': ret.rows[i]['amount'],
@@ -996,7 +1007,7 @@ app.get('/item/:id', async (req, res) => {
   });
 });
 
-app.get('/add/item', requireAdmin, async (req, res) => {
+app.get('/add/item', requireLogin, requireAdmin, async (req, res) => {
   res.render('item_add', {
     'serverTime': Now(),
     'username': req.session.user,
@@ -1004,9 +1015,15 @@ app.get('/add/item', requireAdmin, async (req, res) => {
   });
 });
 
-app.get('/update/item/:id', requireAdmin, async (req, res) => {
+app.get('/update/item/:id', requireLogin, requireAdmin, async (req, res) => {
   if (isNaN(Number(req.params.id))) {
-    res.status(400).end('invalid id');
+    res.status(400)
+    res.render('error', {
+      'serverTime': Now(),
+      'username': req.session.user,
+      'userID': req.session.user_id,
+      'errorMsg': 'Id must be a number'
+    });
     return;
   }
 
@@ -1019,7 +1036,7 @@ app.get('/update/item/:id', requireAdmin, async (req, res) => {
 });
 
 /* list of discounts with actions add and delete */
-app.get('/discounts', requireAdmin, async (req, res) => {
+app.get('/discounts', requireLogin, requireAdmin, async (req, res) => {
   res.render('discounts', {
     'serverTime': Now(),
     'username': req.session.user,
@@ -1029,7 +1046,13 @@ app.get('/discounts', requireAdmin, async (req, res) => {
 
 app.get('/order/:id', requireLogin, async (req, res) => {
   if (isNaN(Number(req.params.id))) {
-    res.status(400).end('invalid id');
+    res.status(400)
+    res.render('error', {
+      'serverTime': Now(),
+      'username': req.session.user,
+      'userID': req.session.user_id,
+      'errorMsg': 'Id must be a number'
+    });
     return;
   }
 
@@ -1037,7 +1060,13 @@ app.get('/order/:id', requireLogin, async (req, res) => {
   await order.Find();
 
   if (order.user_id != req.session.user_id) {
-    res.status(403).end('forbidden');
+    res.status(403)
+    res.render('error', {
+      'serverTime': Now(),
+      'username': req.session.user,
+      'userID': req.session.user_id,
+      'errorMsg': 'Forbidden'
+    });
     return;
   }
 
@@ -1061,7 +1090,11 @@ app.get('/cart', requireLogin, async (req, res) => {
   if ('order_id' in req.session)
     res.redirect(`/order/${req.session.order_id}`);
   else
-    res.end("Your cart is empty :(");
+    res.render('error', {
+      'serverTime': Now(),
+      'username': req.session.user,
+      'userID': req.session.user_id,
+      'errorMsg': 'Your cart is empty :(' });
 });
 
 console.log(`Listening on localhost:${kServerPort}`);

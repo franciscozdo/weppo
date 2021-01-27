@@ -8,7 +8,7 @@ function request(method, url, success, fail, data = null) {
           success(JSON.parse(xhttp.responseText));
         } catch (e) {
           console.log("ok");
-          success({});
+          success([]);
         }
       } else {
         fail(xhttp.responseText);
@@ -98,8 +98,8 @@ function orderAddItem(item_id, amount, success, fail) {
   request("PUT", `/api/v1/order/add/${item_id}/${amount}`, success, fail);
 }
 
-function orderDeleteItem(item_order_id, success, fail) {
-  request("DELETE", `/api/v1/order/delete/${item_order_id}`, success, fail);
+function orderDeleteItem(item_order_id, order_id, success, fail) {
+  request("DELETE", `/api/v1/order/delete/${order_id}/${item_order_id}`, success, fail);
 }
 
 /* return list of orders */
