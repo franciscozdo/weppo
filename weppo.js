@@ -488,6 +488,17 @@ async function requireLogin(req, res, next) {
 
 /* ------------------------------------------------------------------------- */
 
+app.get('/api/v1/user/list', requireAdmin, async (req, res) => {
+  let handle = await db.connect();
+  let rows = await handle.query('SELECT id, email, name, address FROM users', []);
+  let users = []
+  for (let i = 0; i < rows.rows.length; ++i) {
+    users.push(rows.rows[i]);
+  }
+  await handle.release();
+  res.json(users);
+});
+
 app.put('/api/v1/role/add/:role', requireAdmin, async (req, res) => {
   let handle = await db.connect();
   await handle.query('INSERT INTO roles (role) VALUES ($1) ON CONFLICT (role) DO NOTHING', [req.params.role]);
@@ -499,7 +510,7 @@ app.put('/api/v1/user/:user_id/role/add/:role_id', requireAdmin, async (req, res
   let handle = await db.connect();
   try {
     await handle.query('INSERT INTO user_role (user_id, role_id) VALUES ($1, $2)', [req.params.user_id, req.params.role_id]);
-    res.end('ok');
+    res.json({'status': 'ok'});
   } catch (ex) {
     console.log('====== EXCEPTION ======');
     console.log(ex);
