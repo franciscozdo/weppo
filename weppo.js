@@ -492,7 +492,7 @@ app.put('/api/v1/role/add/:role', requireAdmin, async (req, res) => {
   let handle = await db.connect();
   await handle.query('INSERT INTO roles (role) VALUES ($1) ON CONFLICT (role) DO NOTHING', [req.params.role]);
   await handle.release();
-  res.end('ok');
+  res.json({'status': 'ok'});
 });
 
 app.put('/api/v1/user/:user_id/role/add/:role_id', requireAdmin, async (req, res) => {
@@ -504,7 +504,7 @@ app.put('/api/v1/user/:user_id/role/add/:role_id', requireAdmin, async (req, res
     console.log('====== EXCEPTION ======');
     console.log(ex);
     console.log('=======================');
-    res.status(400).end('failure');
+    res.status(400).json({'status': 'failure'});
   } finally {
     await handle.release();
   }
@@ -516,7 +516,7 @@ function validateItemAdd(req) {
 
 app.put('/api/v1/item/add', requireAdmin, express.json(), async (req, res) => {
   if (validateItemAdd(req.body) == false) {
-    res.status(400).end('data mismatch');
+    res.status(400).json({'status': 'data mismatch'});
     return;
   }
 
@@ -524,7 +524,7 @@ app.put('/api/v1/item/add', requireAdmin, express.json(), async (req, res) => {
   let item_id = await item.Insert(req.body.name, req.body.price, req.body.amount, req.body.available, req.body.hidden);
 
   if (item_id == -1) {
-    res.status(500).end('internal error');
+    res.status(500).json({'status': 'internal error'});
     return;
   }
 
@@ -543,7 +543,7 @@ async function validateItemUpdate(req) {
 app.put('/api/v1/item/update', requireAdmin, express.json(), async (req, res) => {
   console.log(req.body);
   if (await validateItemUpdate(req.body) == false) {
-    res.status(400).end('data mismatch');
+    res.status(400).json({'status': 'data mismatch'});
     return;
   }
 
@@ -558,7 +558,7 @@ app.put('/api/v1/item/update', requireAdmin, express.json(), async (req, res) =>
   item.hidden = req.body.hidden;
 
   await item.Update();
-  res.end('ok');
+  res.json({'status': 'ok'});
 });
 
 app.get('/api/v1/item/list', async (req, res) => {
@@ -584,7 +584,7 @@ app.get('/api/v1/item/list', async (req, res) => {
 
 app.get('/api/v1/item/:item_id', async (req, res) => {
   if (isNaN(Number(req.params.item_id))) {
-    res.status(400).end('invalid id');
+    res.status(400).json({'status': 'invalid id'});
     return;
   }
 
@@ -594,7 +594,7 @@ app.get('/api/v1/item/:item_id', async (req, res) => {
   await handle.release();
 
   if (ret.rows.length == 0) {
-    res.status(404).end('item not found');
+    res.status(404).json({'status': 'item not found'});
     return;
   }
   let item = {
@@ -625,7 +625,7 @@ async function validateDiscount(req) {
 
 app.put('/api/v1/discount/add', requireAdmin, express.json(), async (req, res) => {
   if (await validateDiscount(req.body) == false) {
-    res.status(400).end('data mismatch');
+    res.status(400).json({'status': 'data mismatch'});
     return;
   }
 
@@ -634,7 +634,7 @@ app.put('/api/v1/discount/add', requireAdmin, express.json(), async (req, res) =
   let discount_id = await discount.Insert(req.body.item_id, req.body.discount, req.body.rule);
 
   if (discount_id == -1) {
-    res.status(500).end('internal error');
+    res.status(500).json({'status': 'internal error'});
     return;
   }
 
@@ -643,24 +643,24 @@ app.put('/api/v1/discount/add', requireAdmin, express.json(), async (req, res) =
 
 app.delete('/api/v1/discount/delete/:discount_id', requireAdmin, async (req, res) => {
   if (isNaN(Number(req.params.discount_id))) {
-    res.status(400).end('invalid id');
+    res.status(400).json({'status': 'invalid id'});
     return;
   }
 
   let discount = new Discount(db, req.params.discount_id);
 
   if (await discount.Find() == false) {
-    res.status(400).end('discount not found');
+    res.status(400).json({'status': 'discount not found'});
     return;
   }
 
   await discount.Invalidate();
-  res.end('ok');
+  res.json({'status': 'ok'});
 });
 
 app.get('/api/v1/discount/list/:item_id', async (req, res) => {
   if (isNaN(Number(req.params.item_id))) {
-    res.status(400).end('invalid id');
+    res.status(400).json({'status': 'invalid id'});
     return;
   }
 
@@ -686,7 +686,7 @@ app.get('/api/v1/discount/list/:item_id', async (req, res) => {
 
 app.get('/api/v1/order/get', requireLogin, async (req, res) => {
   if (!('order_id' in req.session)) {
-    res.status(400).end('no current order');
+    res.status(400).json({'status': 'no current order'});
     return;
   }
 
@@ -706,7 +706,7 @@ app.put('/api/v1/order/create', requireLogin, async (req, res) => {
 
 app.put('/api/v1/order/add/:item_id', requireLogin, async (req, res) => {
   if (isNaN(Number(req.params.item_id))) {
-    res.status(400).end('invalid id');
+    res.status(400).json({'status': 'invalid id'});
     return;
   }
   /* ughh... it's horrible... */
@@ -717,26 +717,26 @@ app.put('/api/v1/order/add/:item_id', requireLogin, async (req, res) => {
 
   /* 2. find order */
   if (!('order_id' in req.session)) {
-    res.status(400).end('data mismatch');
+    res.status(400).json({'status': 'data mismatch'});
     return;
   }
 
   let order = new Order(db, req.session.order_id);
   if (await order.Find() == false) {
     /* 2.1 order doesn't exist (we shouldn't get here) */
-    res.status(400).end('data mismatch');
+    res.status(400).json({'status': 'data mismatch'});
     return;
   }
 
   /* 3. user must be an owner of order */
   if (order.user_id != user.id) {
-    res.status(400).end('data mismatch');
+    res.status(400).json({'status': 'data mismatch'});
     return;
   }
 
   /* 4. order must be open */
   if (order.paid) {
-    res.status(400).end('data mismatch');
+    res.status(400).json({'status': 'data mismatch'});
     return;
   }
 
@@ -744,20 +744,20 @@ app.put('/api/v1/order/add/:item_id', requireLogin, async (req, res) => {
   let item = new Item(db, req.params.item_id);
   if (await item.Find() == false) {
     /* 4.1 item doesn't exist */
-    res.status(400).end('data mismatch');
+    res.status(400).json({'status': 'data mismatch'});
     return;
   }
 
   /* 5. check available */
   if (item.available == false) {
     /* we shouldn't be here... but our permission model is stupid :) */
-    res.status(400).end('data mismatch');
+    res.status(400).json({'status': 'data mismatch'});
     return;
   }
 
   /* 6. check amount */
   if (item.amount == 0) {
-    res.status(400).end('data mismatch');
+    res.status(400).json({'status': 'data mismatch'});
     return;
   }
 
@@ -776,12 +776,12 @@ app.put('/api/v1/order/add/:item_id', requireLogin, async (req, res) => {
   await handle.release();
 
   /* get out of hell */
-  res.end('ok');
+  res.json({'status': 'ok'});
 });
 
 app.delete('/api/v1/order/delete/:item_order_id', requireLogin, async (req, res) => {
   if (isNaN(Number(req.params.item_order_id))) {
-    res.status(400).end('invalid id');
+    res.status(400).json({'status': 'invalid id'});
     return;
   }
 
@@ -791,26 +791,26 @@ app.delete('/api/v1/order/delete/:item_order_id', requireLogin, async (req, res)
 
   /* 2. find order */
   if (!('order_id' in req.session)) {
-    res.status(400).end('data mismatch');
+    res.status(400).json({'status': 'data mismatch'});
     return;
   }
 
   let order = new Order(db, req.session.order_id);
   if (await order.Find() == false) {
     /* 2.1 order doesn't exist (we shouldn't get here) */
-    res.status(400).end('data mismatch');
+    res.status(400).json({'status': 'data mismatch'});
     return;
   }
 
   /* 3. user must be an owner of order */
   if (order.user_id != user.id) {
-    res.status(400).end('data mismatch');
+    res.status(400).json({'status': 'data mismatch'});
     return;
   }
 
   /* 4. order must be open */
   if (order.paid) {
-    res.status(400).end('data mismatch');
+    res.status(400).json({'status': 'data mismatch'});
     return;
   }
 
@@ -831,21 +831,21 @@ app.delete('/api/v1/order/delete/:item_order_id', requireLogin, async (req, res)
   await handle.query(sqlDelete, [req.params.item_order_id]);
 
   await handle.release();
-  res.end('ok');
+  res.json({'status': 'ok'});
 });
 
 app.get('/api/v1/order/user/:user_id/list', requireLogin, async (req, res) => {
   /* 1. recv user */
   let user = new User(db, '');
   if (await user.FindById(req.params.user_id) == false) {
-    res.status(400).end('data mismatch');
+    res.status(400).json({'status': 'data mismatch'});
     return;
   }
 
   /* 2. check permission */
   let me = new User(db, req.session.user);
   if (await me.Admin() == false && me.id != user.id) {
-    res.status(403).end('403');
+    res.status(403).json({'status': '403'});
     return;
   }
 
@@ -875,18 +875,18 @@ app.put('/api/v1/order/pay', requireLogin, async (req, res) => {
   await user.Find();
 
   if (!('order_id' in req.session)) {
-    res.status(400).end('data mismatch');
+    res.status(400).json({'status': 'data mismatch'});
     return;
   }
 
   /* 2. check permission */
   let order = new Order(db, req.session.order_id);
   if (await order.Find() == false) {
-    res.status(400).end('data mismatch');
+    res.status(400).json({'status': 'data mismatch'});
     return;
   }
   if (order.user_id != user.id) {
-    res.status(400).end('data mismatch');
+    res.status(400).json({'status': 'data mismatch'});
     return;
   }
 
@@ -898,7 +898,7 @@ app.put('/api/v1/order/pay', requireLogin, async (req, res) => {
 
 app.get('/api/v1/order/list/:order_id', requireLogin, async (req, res) => {
   if (isNaN(Number(req.params.order_id))) {
-    res.status(400).end('invalid id');
+    res.status(400).json({'status': 'invalid id'});
     return;
   }
 
@@ -909,11 +909,11 @@ app.get('/api/v1/order/list/:order_id', requireLogin, async (req, res) => {
   /* 2. check permission */
   let order = new Order(db, req.params.order_id);
   if (await order.Find() == false) {
-    res.status(400).end('data mismatch');
+    res.status(400).json({'status': 'data mismatch'});
     return;
   }
   if (order.user_id != user.id && await user.Admin() == false) {
-    res.status(400).end('data mismatch');
+    res.status(400).json({'status': 'data mismatch'});
     return;
   }
 
