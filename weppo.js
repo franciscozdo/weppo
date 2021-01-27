@@ -499,6 +499,17 @@ app.get('/api/v1/user/list', requireAdmin, async (req, res) => {
   res.json(users);
 });
 
+app.get('/api/v1/role/list', requireAdmin, async (req, res) => {
+  let handle = await db.connect();
+  let rows = await handle.query('SELECT id, role FROM roles', []);
+  let roles = []
+  for (let i = 0; i < rows.rows.length; ++i) {
+    roles.push(rows.rows[i]);
+  }
+  await handle.release();
+  res.json(roles);
+});
+
 app.put('/api/v1/role/add/:role', requireAdmin, async (req, res) => {
   let handle = await db.connect();
   await handle.query('INSERT INTO roles (role) VALUES ($1) ON CONFLICT (role) DO NOTHING', [req.params.role]);
