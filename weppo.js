@@ -704,9 +704,9 @@ app.put('/api/v1/order/create', requireLogin, async (req, res) => {
   res.json({'id': order_id});
 });
 
-app.put('/api/v1/order/add/:item_id', requireLogin, async (req, res) => {
-  if (isNaN(Number(req.params.item_id))) {
-    res.status(400).end('invalid id');
+app.put('/api/v1/order/add/:item_id/:amount', requireLogin, async (req, res) => {
+  if (isNaN(Number(req.params.item_id)) || isNaN(Number(req.params.amount))) {
+    res.status(400).end('invalid number');
     return;
   }
   /* ughh... it's horrible... */
@@ -756,7 +756,8 @@ app.put('/api/v1/order/add/:item_id', requireLogin, async (req, res) => {
   }
 
   /* 6. check amount */
-  if (item.amount == 0) {
+  let amount = req.params.amount;
+  if (item.amount < amount) {
     res.status(400).end('data mismatch');
     return;
   }
@@ -765,12 +766,12 @@ app.put('/api/v1/order/add/:item_id', requireLogin, async (req, res) => {
 
 
   /* ok... it's time to add item into order */
-  let stmt = 'INSERT INTO item_order (item_id, order_id) VALUES ($1, $2)';
+  let stmt = 'INSERT INTO item_order (item_id, order_id, amount) VALUES ($1, $2, $3)';
   let handle = await db.connect();
 
-  await handle.query(stmt, [item.id, order.id]);
+  await handle.query(stmt, [item.id, order.id, amount]);
 
-  item.amount--;
+  item.amount-=amount;
   await item.Update();
 
   await handle.release();
@@ -816,19 +817,20 @@ app.delete('/api/v1/order/delete/:item_order_id', requireLogin, async (req, res)
 
   /* 5. invalidate item */
 
-  let sqlFind = 'SELECT item_id FROM item_order WHERE id=$1';
-  let sqlDelete = 'DELETE FROM item_order WHERE id=$1';
+  let sqlFind = 'SELECT item_id, amount FROM item_order WHERE item_order_id=$1';
+  let sqlDelete = 'DELETE FROM item_order WHERE item_order_id=$1';
   let handle = await db.connect();
 
   /* 6.1 update amount */
   let ret = await handle.query(sqlFind, [req.params.item_order_id]);
   let item = new Item(db, ret.rows[0]['item_id']);
+  let amount = ret.rows[0]['amount'];
   await item.Find();
-  item.amount++;
+  item.amount += amount;
   await item.Update();
 
   /* 6.2 delete old item */
-  await handle.query(sqlDelete, [req.params.item_order_id]);
+  await handle.query(sqlDelete, [ite.params.item_order_id]);
 
   await handle.release();
   res.end('ok');
@@ -918,7 +920,11 @@ app.get('/api/v1/order/list/:order_id', requireLogin, async (req, res) => {
   }
 
   let items = [];
-  let sql = 'SELECT id, item_id, order_id FROM item_order WHERE order_id=$1';
+  let sql =
+    'SELECT items.id, item_order.item_order_id, items.name, items.price, item_order.amount ' +
+    'FROM items JOIN item_order ON items.id = item_order.item_id ' +
+    'WHERE item_order.order_id = $1';
+
   let handle = await db.connect();
   let ret = await handle.query(sql, [order.id]);
   await handle.release();
@@ -926,7 +932,10 @@ app.get('/api/v1/order/list/:order_id', requireLogin, async (req, res) => {
   for (let i = 0; i < ret.rows.length; ++i) {
     items.push({
       'id': ret.rows[i]['id'],
-      'item_id': ret.rows[i]['item_id']
+      'item_order_id': ret.rows[i]['id'],
+      'name': ret.rows[i]['name'],
+      'price': ret.rows[i]['price'],
+      'amount': ret.rows[i]['amount'],
     });
   }
 

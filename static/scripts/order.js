@@ -11,7 +11,7 @@ function createItemListNode(item) {
   a1.innerText = item.name;
   a1.setAttribute("href", `/item/${item.id}`);
   let span = document.createElement("span");
-  span.innerText = ` [price: ${item.price}$]`
+  span.innerText = ` [price: ${item.price}$] [amount: ${item.amount}pcs]`
   li.appendChild(a1);
   li.appendChild(span);
   return li;
@@ -19,11 +19,9 @@ function createItemListNode(item) {
 
 function insertOrderItems(order_id) {
   function success(items) {
-    items.sort((a, b) => {return a.item_id - b.item_id});
+    items.sort((a, b) => {return a.id - b.id});
     for (item of items) {
-      getItemById(item.item_id, (item) => {
         append("orderItemList", createItemListNode(item));
-      }, console.log);
     }
   }
   getOrderItems(order_id, success, console.log);
@@ -33,12 +31,14 @@ function insertOrderItems(order_id) {
 function buttonAddToCart(item_id) {
   function success(x) {
     console.log("added to cart");
+    insertItem(item_id);
   }
+  /* assume we add one item only */
   getCurrentOrder(
-    (x) => {console.log(x);orderAddItem(item_id, success, console.log)},
+    (x) => {console.log(x);orderAddItem(item_id, 1, success, console.log)},
     (x) => {
       createOrder(
-        (x) => {console.log(x); orderAddItem(item_id, success, console.log)},
+        (x) => {console.log(x); orderAddItem(item_id, 1, success, console.log)},
         console.log)
     });
 }

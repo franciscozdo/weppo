@@ -94,8 +94,8 @@ function getCurrentOrder(success, fail) {
   request("GET", `/api/v1/order/get`, success, fail);
 }
 
-function orderAddItem(item_id, success, fail) {
-  request("PUT", `/api/v1/order/add/${item_id}`, success, fail);
+function orderAddItem(item_id, amount, success, fail) {
+  request("PUT", `/api/v1/order/add/${item_id}/${amount}`, success, fail);
 }
 
 function orderDeleteItem(item_order_id, success, fail) {

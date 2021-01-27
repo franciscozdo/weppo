@@ -38,9 +38,10 @@ CREATE TABLE IF NOT EXISTS items (
 );
 
 CREATE TABLE IF NOT EXISTS item_order (
-    id SERIAL PRIMARY KEY,
+    item_order_id SERIAL PRIMARY KEY,
     item_id INTEGER NOT NULL,
     order_id INTEGER NOT NULL,
+    amount INTEGER NOT NULL,
     FOREIGN KEY(item_id) REFERENCES items(id),
     FOREIGN KEY(order_id) REFERENCES orders(id)
 );
