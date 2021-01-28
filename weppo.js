@@ -648,14 +648,16 @@ app.get('/api/v1/item/list', async (req, res) => {
   let items = []
 
   for (let i = 0; i < ret.rows.length; ++i) {
-    items.push({
-      'id': ret.rows[i]['id'],
-      'name': ret.rows[i]['name'],
-      'price': ret.rows[i]['price'],
-      'amount': ret.rows[i]['amount'],
-      'available': ret.rows[i]['available'],
-      'hidden': ret.rows[i]['hidden']
-    });
+    if (!ret.rows[i]['hidden'] || req.session.admin) {
+      items.push({
+        'id': ret.rows[i]['id'],
+        'name': ret.rows[i]['name'],
+        'price': ret.rows[i]['price'],
+        'amount': ret.rows[i]['amount'],
+        'available': ret.rows[i]['available'],
+        'hidden': ret.rows[i]['hidden']
+      });
+    }
   }
 
   res.json(items);
