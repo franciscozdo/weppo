@@ -470,20 +470,27 @@ app.get('/logout', async (req, res) => {
 /* ------------------------------------------------------------------------- */
 
 async function requireAdmin(req, res, next) {
+  let username = '', user_id = '';
   if ('user' in req.session) {
     if (req.session.admin) {
       next();
       return;
     }
+    username = req.session.user;
+    user_id = req.session.user_id;
   }
-  res.status(403)
-  res.render('error', {
-    'serverTime': Now(),
-    'username': '',
-    'userID': '',
-    'admin': false,
-    'errorMsg': '403 Forbidden'
-  });
+  res.status(403);
+  if (req.url.startsWith("/api/v1/")) {
+    res.json({"status": "not found"});
+  } else {
+    res.render('error', {
+      'serverTime': Now(),
+      'username': username,
+      'userID': user_id,
+      'admin': false,
+      'errorMsg': 'You have no permission to view this content'
+    });
+  }
 }
 
 async function requireLogin(req, res, next) {
@@ -491,14 +498,18 @@ async function requireLogin(req, res, next) {
     next();
     return;
   }
-  res.status(403)
-  res.render('error', {
-    'serverTime': Now(),
-    'username': '',
-    'userID': '',
-    'admin': false,
-    'errorMsg': '403 Forbidden'
-  });
+  res.status(403);
+  if (req.url.startsWith("/api/v1/")) {
+    res.json({"status": "not found"});
+  } else {
+    res.render('error', {
+      'serverTime': Now(),
+      'username': '',
+      'userID': '',
+      'admin': false,
+      'errorMsg': '403 Forbidden'
+    });
+  }
 }
 
 /* ------------------------------------------------------------------------- */
@@ -1035,13 +1046,7 @@ app.get('/api/v1/order/:order_id/price', requireLogin, async (req, res) => {
     res.status(400).json({'status': 'invalid id'});
     return;
   }
-//  let sql = 'SELECT items.price, item_order.amount ' +
-//    'FROM orders' +
-//    'JOIN item_order ON orders.id = item_order.order_id ' +
-//    'JOIN items ON item_order.item_id = items.id ' +
-//    'WHERE orders.id=$1;';
-
-let sql = 'SELECT items.price, item_order.amount FROM orders JOIN item_order ON orders.id = item_order.order_id JOIN items ON item_order.item_id = items.id WHERE orders.id=$1';
+  let sql = 'SELECT items.price, item_order.amount FROM orders JOIN item_order ON orders.id = item_order.order_id JOIN items ON item_order.item_id = items.id WHERE orders.id=$1';
   let handle = await db.connect();
   let ret = await handle.query(sql, [req.params.order_id]);
   await handle.release();
@@ -1095,7 +1100,14 @@ app.get('/list/item', async (req, res) => {
 
 app.get('/item/:id', async (req, res) => {
   if (isNaN(Number(req.params.id))) {
-    res.status(400).end('invalid id');
+    res.status(400);
+    res.render('error', {
+      'serverTime': Now(),
+      'username': req.session.user,
+      'userID': req.session.user_id,
+      'admin': req.session.admin,
+      'errorMsg': `Item of id ${req.params.id} does not exist`
+    });
     return;
   }
   let user = '';
@@ -1133,7 +1145,7 @@ app.get('/update/item/:id', requireLogin, requireAdmin, async (req, res) => {
       'username': req.session.user,
       'userID': req.session.user_id,
       'admin': req.session.admin,
-      'errorMsg': 'Id must be a number'
+      'errorMsg': `Item of id ${req.params.id} does not exist`
     });
     return;
   }
@@ -1165,7 +1177,7 @@ app.get('/order/:id', requireLogin, async (req, res) => {
       'username': req.session.user,
       'userID': req.session.user_id,
       'admin': req.session.admin,
-      'errorMsg': 'Id must be a number'
+      'errorMsg': `Order of id ${req.params.id} does not exist`
     });
     return;
   }
@@ -1180,7 +1192,7 @@ app.get('/order/:id', requireLogin, async (req, res) => {
       'username': req.session.user,
       'userID': req.session.user_id,
       'admin': req.session.admin,
-      'errorMsg': 'Forbidden'
+      'errorMsg': 'You have no permission to view this order'
     });
     return;
   }
@@ -1238,6 +1250,55 @@ app.get('/cart', requireLogin, async (req, res) => {
       'userID': req.session.user_id,
       'admin': req.session.admin,
       'errorMsg': 'Your cart is empty :(' });
+});
+
+app.get('/account', requireLogin, async (req, res) => {
+  res.render('account', {
+    'serverTime': Now(),
+    'username': req.session.user,
+    'userID': req.session.user_id,
+    'admin': req.session.admin
+  });
+});
+
+app.get('/users', requireAdmin, async (req, res) => {
+  res.render('user_list', {
+    'serverTime': Now(),
+    'username': req.session.user,
+    'userID': req.session.user_id,
+    'admin': req.session.admin
+  });
+});
+
+app.get('/user/:user_id', requireAdmin, async (req, res) => {
+  if (isNaN(Number(req.params.user_id))) {
+    res.status(400)
+    res.render('error', {
+      'serverTime': Now(),
+      'username': req.session.user,
+      'userID': req.session.user_id,
+      'admin': req.session.admin,
+      'errorMsg': `User of id ${req.params.user_id} does not exist`
+    });
+    return;
+  }
+
+  res.render('user', {
+    'serverTime': Now(),
+    'username': req.session.user,
+    'userID': req.session.user_id,
+    'otherUserID': user_id,
+    'admin': req.session.admin
+  });
+});
+
+app.get('/admin', requireAdmin, async (req, res) => {
+  res.render('admin', {
+    'serverTime': Now(),
+    'username': req.session.user,
+    'userID': req.session.user_id,
+    'admin': req.session.admin
+  }
 });
 
 console.log(`Listening on localhost:${kServerPort}`);
