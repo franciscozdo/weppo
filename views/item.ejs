@@ -17,10 +17,16 @@
     <div>Price: <span id="itemPrice"></span>$</div>
     <div>Amount: <span id="itemAmount"></span> pcs.</div>
     <div>This item is <span id="itemAvailable"></span>.</div>
+    <% if (username.length != 0) { %>
     <div id="addToCart">
       <button onclick="buttonAddToCart(<%= itemID %>)">Add to cart</button>
       <input type="number" name="amount" id="orderAmount" min="1" value="1" style="width:50px"/>
     </div>
+    <% } else { %>
+    <div id="addToCart">
+      <p style="color:red;margin-top:10px">Login to purchase items.</p>
+    </div>
+    <% } %>
     <% if (admin) { %>
     <div>
       <a href="/update/item/<%= itemID %>">Modify</a>
