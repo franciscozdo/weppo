@@ -1,6 +1,6 @@
 /* INIT */
 
-function createOrderListNode(order) {
+function createOrderListNode(order, owner) {
   let li = document.createElement("li");
   li.setAttribute("id", `item${order.id}`);
   let name = document.createElement("a");
@@ -13,21 +13,27 @@ function createOrderListNode(order) {
     paid.innerText = " [paid]"
     paid.setAttribute("style", "color:green");
   } else {
-    paid = document.createElement("button");
-    paid.innerText = "Pay";
-    paid.setAttribute("onclick", `buttonPayOrder(${order.id})`);
-    paid.setAttribute("class", `payButton`);
+    if (owner) {
+      paid = document.createElement("button");
+      paid.innerText = "Pay";
+      paid.setAttribute("onclick", `buttonPayOrder(${order.id})`);
+      paid.setAttribute("class", `payButton`);
+    } else {
+      paid = document.createElement("span");
+      paid.innerText = " [not paid]"
+      paid.setAttribute("style", "color:red");
+    }
   }
   li.appendChild(name);
   li.appendChild(paid);
   return li;
 }
 
-function insertOrderList(user_id) {
+function insertOrderList(user_id, owner) {
   function success(orders) {
     for (order of orders) {
       console.log(order);
-      append("orderList", createOrderListNode(order));
+      append("orderList", createOrderListNode(order, owner));
     }
     if (orders.length > 0) {
       document.getElementById("oops").remove();
@@ -36,7 +42,7 @@ function insertOrderList(user_id) {
   getUserOrders(user_id, success, console.log);
 }
 
-function createItemListNode(item, order_id, paid) {
+function createItemListNode(item, order_id, paid, owner) {
   let li = document.createElement("li");
   li.setAttribute("id", `item${item.item_order_id}`);
   let name = document.createElement("a");
@@ -46,7 +52,7 @@ function createItemListNode(item, order_id, paid) {
   span.innerText = ` [price: ${item.price}$] [amount: ${item.amount}pcs]`
   li.appendChild(name);
   li.appendChild(span);
-  if (!paid) {
+  if (!paid && owner) {
     let del = document.createElement("button");
     del.setAttribute("onclick", `buttonRemoveItem(${item.item_order_id}, ${order_id})`);
     del.setAttribute("class", "deleteButton");
@@ -56,11 +62,11 @@ function createItemListNode(item, order_id, paid) {
   return li;
 }
 
-function insertOrderItems(order_id, paid) {
+function insertOrderItems(order_id, paid, owner) {
   function success(items) {
     items.sort((a, b) => {return a.id - b.id});
     for (item of items) {
-      append("orderItemList", createItemListNode(item, order_id, paid));
+      append("orderItemList", createItemListNode(item, order_id, paid, owner));
     }
   }
   function fail(res) {

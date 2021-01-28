@@ -1287,7 +1287,7 @@ app.get('/user/:user_id', requireAdmin, async (req, res) => {
     'serverTime': Now(),
     'username': req.session.user,
     'userID': req.session.user_id,
-    'otherUserID': user_id,
+    'otherUserID': req.params.user_id,
     'admin': req.session.admin
   });
 });
@@ -1298,7 +1298,7 @@ app.get('/admin', requireAdmin, async (req, res) => {
     'username': req.session.user,
     'userID': req.session.user_id,
     'admin': req.session.admin
-  }
+  });
 });
 
 console.log(`Listening on localhost:${kServerPort}`);

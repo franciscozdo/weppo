@@ -10,8 +10,8 @@
 <body>
   <%- include('header') %>
   <main class="content">
-  <% if (admin) { %>
-  <h1>Orders of user <%= otherUserID %></h1>
+  <% if (admin && otherUserID != userID) { %>
+  <h1>Orders of user '<%= otherUserID %>'</h1>
   <% } else { %>
   <h1>Your orders</h1>
   <% } %>
@@ -20,7 +20,7 @@
   </main>
   <%- include('footer') %>
   <script>
-    document.onload = insertOrderList(<%= otherUserID %>);
+    document.onload = insertOrderList(<%= otherUserID %>, <%= otherUserID == userID %>);
   </script>
 </body>
 </html>

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <%- include('meta') %>
+  <script src="/scripts/ajax.js"></script>
+  <script src="/scripts/common.js"></script>
+  <script src="/scripts/user.js"></script>
+  <title>weppo - Admin panel</title>
+</head>
+<body>
+  <%- include('header') %>
+  <main class="content">
+    <h1>Hi <%= username %></h1>
+    <h5>Admin actions</h5>
+    <ul>
+      <li><a href="/orders/all">See all orders</a></li>
+      <li><a href="/users">See all users</a></li>
+      <li><a href="/list/item">See all items</a></li>
+      <li><a href="/add/item">Add item</a></li>
+    </ul>
+  </main>
+  <%- include('footer') %>
+  <script>
+    insertMe();
+  </script>
+</body>
+</html>
+

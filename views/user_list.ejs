@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <%- include('meta') %>
+  <script src="/scripts/ajax.js"></script>
+  <script src="/scripts/common.js"></script>
+  <script src="/scripts/user.js"></script>
+  <title>weppo - users</title>
+</head>
+<body>
+  <%- include('header') %>
+  <main class="content">
+  <h1>Users</h1>
+  <ul id="userList"></ul>
+  </main>
+  <%- include('footer') %>
+  <script>
+    insertUserList();
+  </script>
+</body>
+</html>
+

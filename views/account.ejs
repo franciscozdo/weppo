@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <%- include('meta') %>
+  <script src="/scripts/ajax.js"></script>
+  <script src="/scripts/common.js"></script>
+  <script src="/scripts/user.js"></script>
+  <title>weppo - <%= username %></title>
+</head>
+<body>
+  <%- include('header') %>
+  <main class="content">
+    <h1>Hi <%= username %></h1>
+    <h5>Your data</h5>
+    <ul>
+      <li>Name: <span id="name"></span></li>
+      <li>Email: <span id="email"></span></li>
+      <li>Address: <span id="address"></span></li>
+      <li><a href="/orders">Your orders</a></li>
+      <% if (admin) { %>
+      <li>You are an admin. Go see <a href="/admin">more actions</a>.</li>
+      <% } %>
+    </ul>
+  </main>
+  <%- include('footer') %>
+  <script>
+    insertMe();
+  </script>
+</body>
+</html>
+

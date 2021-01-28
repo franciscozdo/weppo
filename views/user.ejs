@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <%- include('meta') %>
+  <script src="/scripts/ajax.js"></script>
+  <script src="/scripts/common.js"></script>
+  <script src="/scripts/user.js"></script>
+  <title>weppo - user <%= otherUserID %></title>
+</head>
+<body>
+  <%- include('header') %>
+  <main class="content">
+    <h1>Data of user '<%= otherUserID %>'</h1>
+    <ul>
+      <li>Name: <span id="name"></span></li>
+      <li>Email: <span id="email"></span></li>
+      <li>Address: <span id="address"></span></li>
+      <li><a href="/orders/<%= otherUserID %>">Orders of user</a></li>
+    </ul>
+  </main>
+  <%- include('footer') %>
+  <script>
+    insertUser(<%= otherUserID %>);
+  </script>
+</body>
+</html>
+

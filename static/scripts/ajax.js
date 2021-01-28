@@ -123,12 +123,14 @@ function getOrderPrice(order_id, success, fail) {
   request("GET", `/api/v1/order/${order_id}/price`, success, fail);
 }
 
-/* future */
-//function getCurrentOrder(success, failure) {
-//  request("", ``, success, failure);
-//}
+function getMe(success, fail) {
+  request("GET", `/api/v1/user/me`, success, fail);
+}
 
-//function name(success, failure) {
-//  request("", ``, success, failure);
-//}
+function getUser(user_id, success, fail) {
+  request("GET", `/api/v1/user/by_id/${user_id}`, success, fail);
+}
 
+function getUserList(success, fail) {
+  request("GET", `/api/v1/user/list`, success, fail);
+}

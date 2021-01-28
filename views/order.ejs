@@ -14,14 +14,18 @@
   <ul id="orderItemList"></ul>
   <div>Price: <span id="price"></span></div>
   <% if (!paid) { %>
-  <button onclick="buttonPayOrder(<%= orderID %>)">Pay</button>
+    <% if (userID == otherUser) { %>
+      <button onclick="buttonPayOrder(<%= orderID %>)">Pay</button>
+    <% } else { %>
+      <div style="color:red">[not paid]</div>
+    <% } %>
   <% } else { %>
-  <div style="color:green">[paid]</div>
+    <div style="color:green">[paid]</div>
   <% } %>
   </main>
   <%- include('footer') %>
   <script>
-    insertOrderItems(<%= orderID %>, <%= paid %>);
+    insertOrderItems(<%= orderID %>, <%= paid %>, <%= otherUser == userID %>);
     insertPrice(<%= orderID %>);
   </script>
 </body>
