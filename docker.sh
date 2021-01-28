@@ -17,7 +17,7 @@ init() {
   cat db/weppo.sql | docker container exec -i weppo-postgres psql -U weppo -d weppo -a
 }
 example() {
-  cat db/createexample.sql | docker container exec -i weppo-postgres psql -U weppo -d weppo -a
+  cat db/example.sql | docker container exec -i weppo-postgres psql -U weppo -d weppo -a
 }
 
 case $1 in
