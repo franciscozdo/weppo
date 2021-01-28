@@ -620,7 +620,6 @@ async function validateItemUpdate(req) {
 }
 
 app.put('/api/v1/item/update', requireLogin, requireAdmin, express.json(), async (req, res) => {
-  console.log(req.body);
   if (await validateItemUpdate(req.body) == false) {
     res.status(400).json({'status': 'data mismatch'});
     return;
