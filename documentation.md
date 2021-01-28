@@ -27,10 +27,10 @@ Dla administratora:
 * wyświetlenie szczegółów dowolnego zamówienia
 
 Udostępniamy do testowania dwa konta:
-|     email       | hasło  |
-|:---------------:|:------:|
-| root@localhost  | passwd |
-| user@remotehost | passwd |
+|    email    |   hasło  |
+|:-----------:|:--------:|
+| admin@weppo | admin123 |
+| user@weppo  | user123  |
 
 
 ## Opis implementacji
