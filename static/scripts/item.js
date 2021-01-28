@@ -153,14 +153,14 @@ function buttonUpdateItem(id) {
 
 function handleQuery(query, item) {
   let name = item.getAttribute("data-name");
-  if (query === '' || name.includes(query)) {
+  if (query === '' || name.toLowerCase().includes(query.toLowerCase())) {
     item.style.display='';
   } else {
     item.style.display='none';
   }
 }
 
-function buttonFilter() {
+function onChangeFilter() {
   let query = document.getElementById("filter").value;
   let list = document.getElementById("itemList");
   let elems = list.getElementsByTagName("li");

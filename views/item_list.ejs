@@ -11,7 +11,10 @@
   <%- include('header') %>
   <main class="content">
   <h1>Items</h1>
-  <div><input type="text" id="filter"/><button onclick="buttonFilter()">Filter</button></div>
+  <div>
+    <input type="text" id="filter" onchange="onChangeFilter()"/>
+    <button onclick="buttonFilter()">Filter</button>
+  </div>
   <% if (admin) {%>
   <a href="/add/item">Add item</a>
   <% } %>
