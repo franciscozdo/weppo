@@ -43,6 +43,7 @@ function insertItemUpdate(id) {
 
 function createItemListNode(item, admin) {
   let li = document.createElement("li");
+  li.setAttribute("data-name", item.name);
   let name = document.createElement("a");
   name.innerText = item.name;
   name.setAttribute("href", `/item/${item.id}`);
@@ -63,8 +64,7 @@ function insertItemList(admin) {
   function success(items) {
     items.sort((a, b) => {return a.id - b.id});
     for (item of items) {
-      if (!item.hidden || admin)
-        append("itemList", createItemListNode(item, admin));
+      append("itemList", createItemListNode(item, admin));
     }
   }
   getItemList(success, console.log);
@@ -149,4 +149,22 @@ function buttonUpdateItem(id) {
    * then we clear form and update item info
    */
   getItemById(id, getValues, console.log);
+}
+
+function handleQuery(query, item) {
+  let name = item.getAttribute("data-name");
+  if (query === '' || name.includes(query)) {
+    item.style.display='';
+  } else {
+    item.style.display='none';
+  }
+}
+
+function buttonFilter() {
+  let query = document.getElementById("filter").value;
+  let list = document.getElementById("itemList");
+  let elems = list.getElementsByTagName("li");
+  for (item of elems) {
+    handleQuery(query, item);
+  }
 }

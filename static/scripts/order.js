@@ -143,6 +143,7 @@ function buttonPayOrder(order_id) {
 function buttonRemoveItem(item_ord_id, order_id) {
   function success(x) {
     document.getElementById(`item${item_ord_id}`).remove();
+    location.reload();
   }
   orderDeleteItem(item_ord_id, order_id, success, console.log);
 }

@@ -21,3 +21,6 @@ function clearForm(form) {
   }
 }
 
+function buttonSearch(id) {
+  let query = document.getElementById(id).value;
+}
