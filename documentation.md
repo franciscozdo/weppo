@@ -46,7 +46,7 @@ Zapytania do API
 |GET   |A|'/api/v1/user/list'|Pobierz listę użytkowników.|
 |GET   |A|'/api/v1/role/list'|Pobierz listę ról.|
 |PUT   |A|'/api/v1/role/add/:role'|Dodaj rolę.|
-|PUT   |-|'/api/v1/user/:user\_id/role/add/:role\_id'|Przypisz rolę użytkownikowi.|
+|PUT   |A|'/api/v1/user/:user\_id/role/add/:role\_id'|Przypisz rolę użytkownikowi.|
 |PUT   |A|'/api/v1/item/add'|Dodaj przedmiot.|
 |PUT   |A|'/api/v1/item/update'|Zmodyfikuj przedmiot. (ustawiane są wszystkie pola oprócz id.)|
 |GET   |-|'/api/v1/item/list'|Pobierz listę przedmiotów.|
@@ -68,6 +68,8 @@ Zapytania do API
 > (L - zalogowany użytkownik, A - administrator)
 
 Wszystkie zapytania do API zwracają wynik w formacie JSON.
+
+Dane przechowywane są w bazie PostgreSQL.
 
 ### Frontend
 Tworzenie treści, które wyświetlają się na ekranie można podzielić na dwie części:
