@@ -60,35 +60,79 @@ Udostępniamy do testowania dwa konta:
 
 Zapytania do API
 
-|Metoda|\*|URL|Opis|
-|:----:|-|:--:|:---|
-|GET   |L|'/api/v1/user/me'|Pobierz dane zalogowanego użytkownika.|
-|GET   |A|'/api/v1/user/by\_id/:user\_id'|Pobierz dane dowolnego użytkownika (wg id) |
-|GET   |A|'/api/v1/user/list'|Pobierz listę użytkowników.|
-|GET   |A|'/api/v1/role/list'|Pobierz listę ról.|
-|PUT   |A|'/api/v1/role/add/:role'|Dodaj rolę.|
-|PUT   |A|'/api/v1/user/:user\_id/role/add/:role\_id'|Przypisz rolę użytkownikowi.|
-|PUT   |A|'/api/v1/item/add'|Dodaj przedmiot.|
-|PUT   |A|'/api/v1/item/update'|Zmodyfikuj przedmiot. (ustawiane są wszystkie pola oprócz id.)|
-|GET   |-|'/api/v1/item/list'|Pobierz listę przedmiotów.|
-|GET   |-|'/api/v1/item/:item\_id'|Pobierz dane przedmiotu.|
-|PUT   |A|'/api/v1/discount/add'|Dodaj zniżkę.|
-|DELETE|A|'/api/v1/discount/delete/:discount\_id'|Usuń zniżkę.|
-|GET   |-|'/api/v1/discount/list/:item\_id'|Pobierz wszystkie zniżki przypisane do przedmiotu.|
-|GET   |L|'/api/v1/order/get'|Pobierz id aktualnego zamówienia (koszyka).|
-|PUT   |L|'/api/v1/order/create'|Stwórz nowe zamówienie. (zwracane id)|
-|PUT   |L|'/api/v1/order/add/:item\_id/:amount'|Dodaj przedmiot do koszyka (w podanej ilości).|
-|DELETE|L|'/api/v1/order/delete/:order\_id/:item\_order\_id'|Usuń przedmiot z zamówienia.|
-|GET   |L|'/api/v1/order/user/:user\_id/list'|Pobierz zamówienia użytkownika. (Nie-admin może pobrać tylko swoje zamówienia).|
-|PUT   |L|'/api/v1/order/pay/:order\_id'|Zapłać za zamówienie.|
-|GET   |L|'/api/v1/order/list/:order\_id'|Wyświetl przedmioty zamówienia.|
-|GET   |A|'/api/v1/order/all'|Wyświetl wszystkie zamówienia.|
-|GET   |L|'/api/v1/order/:order\_id/price'|Podaj wartość zamówienia.|
+|Metoda|\*|URL|Opis|Wynik|
+|:----:|-|:--:|:--:|:----|
+|GET   |L|'/api/v1/user/me'|Pobierz dane zalogowanego użytkownika.|user|
+|GET   |A|'/api/v1/user/by\_id/:user\_id'|Pobierz dane dowolnego użytkownika (wg id).|user|
+|GET   |A|'/api/v1/user/list'|Pobierz listę użytkowników.|[str]|
+|GET   |A|'/api/v1/role/list'|Pobierz listę ról.|[str]|
+|PUT   |A|'/api/v1/role/add/:role'|Dodaj rolę.|-|
+|PUT   |A|'/api/v1/user/:user\_id/role/add/:role\_id'|Przypisz rolę użytkownikowi.|-|
+|PUT   |A|'/api/v1/item/add'|Dodaj przedmiot.|-|
+|PUT   |A|'/api/v1/item/update'|Zmodyfikuj przedmiot. (ustawiane są wszystkie pola oprócz id.)|-|
+|GET   |-|'/api/v1/item/list'|Pobierz listę przedmiotów.|[item]|
+|GET   |-|'/api/v1/item/:item\_id'|Pobierz dane przedmiotu.|item|
+|PUT   |A|'/api/v1/discount/add'|Dodaj zniżkę.|-|
+|DELETE|A|'/api/v1/discount/delete/:discount\_id'|Usuń zniżkę.|-|
+|GET   |-|'/api/v1/discount/list/:item\_id'|Pobierz wszystkie zniżki przypisane do przedmiotu.|[discount]|
+|GET   |L|'/api/v1/order/get'|Pobierz id aktualnego zamówienia (koszyka).|int|
+|PUT   |L|'/api/v1/order/create'|Stwórz nowe zamówienie. (zwracane id)|-|
+|PUT   |L|'/api/v1/order/add/:item\_id/:amount'|Dodaj przedmiot do koszyka (w podanej ilości).|-|
+|DELETE|L|'/api/v1/order/delete/:order\_id/:item\_order\_id'|Usuń przedmiot z zamówienia.|-|
+|GET   |L|'/api/v1/order/user/:user\_id/list'|Pobierz zamówienia użytkownika. (Nie-admin może pobrać tylko swoje zamówienia).|[order]|
+|PUT   |L|'/api/v1/order/pay/:order\_id'|Zapłać za zamówienie.|-|
+|GET   |L|'/api/v1/order/list/:order\_id'|Wyświetl przedmioty zamówienia.|[order\_item]|
+|GET   |A|'/api/v1/order/all'|Wyświetl wszystkie zamówienia.|[order]|
+|GET   |L|'/api/v1/order/:order\_id/price'|Podaj wartość zamówienia.|price|
 
 > Druga kolumna mówi o dostępie do danego wywołania API.
 > (L - zalogowany użytkownik, A - administrator)
 
 Wszystkie zapytania do API zwracają wynik w formacie JSON.
+
+```
+user = {
+    id -- int,
+    email -- str,
+    name -- str,
+    address -- str,
+    roles -- [str]
+}
+
+item = {
+    id -- int,
+    name -- str,
+    price -- int,
+    amount -- int,
+    available -- bool,
+    hidden -- bool
+}
+
+discount = {
+    id -- int,
+    item_id -- int,
+    discount -- float,
+    rule -- str
+}
+
+order = {
+    id -- int,
+    user_id -- int,
+    paid -- bool
+}
+
+order_item = {
+    id -- int,
+    item_order_id -- int,
+    name -- str,
+    price -- int,
+    amount -- int
+}
+
+price = {
+    price -- int
+}
+```
 
 Dane przechowywane są w bazie PostgreSQL.
 
