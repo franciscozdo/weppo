@@ -32,6 +32,27 @@ Udostępniamy do testowania dwa konta:
 | admin@weppo | admin123 |
 | user@weppo  | user123  |
 
+## Opis dostępnych endpointów
+
+| Adres          |\*| Opis |
+|:--------------:|--|:-----|
+|/               |  | Główna strona.
+|/register       |  | Strona rejestracji.
+|/login          |  | Strona logowania.
+|/logout         |  | Akcja wylogowania się.
+|/list/item      |  | Lista wszystkich towarów
+|/item/:id       |  | Towar o konkretnym id.
+|/order/:id      |LA| Zamówienie o numerze id.
+|/orders         |L | Wszystkie zamówienia zalogowanego użytkownika.
+|/cart           |L | Koszyk.
+|/account        |L | Szczegóły konta zalogowanego użytkownika.
+|/add/item       |A | Dodawanie przedmiotu.
+|/update/item/:id|A | Aktualizacja danych przedmiotu.
+|/orders/all     |A | Wszystkie zamówienia.
+|/orders/:id     |A | Zamówienia użytkownika o numerze id.
+|/users          |A | Lista użytkowników.
+|/user/:user\_id |A | Szczegóły użytkownika o id.
+|/admin          |A | Panel administratora.
 
 ## Opis implementacji
 
@@ -74,7 +95,7 @@ Dane przechowywane są w bazie PostgreSQL.
 ### Frontend
 Tworzenie treści, które wyświetlają się na ekranie można podzielić na dwie części:
 1. Renderowanie szkieletu (a czasem całej) strony przez Express'a.
-2. Uzupełnianie treści przez JS po stronie klienta (przez asynchroniczne zaytania do API 
+2. Uzupełnianie treści przez JS po stronie klienta (przez asynchroniczne zapytania do API
   udostępnionego przez backend. Zapytania korzystają ze stylu przekazywania kontynuacji i 
   w zależności od tego czy zapytanie się powiodło uruchamiana jest odpowiednia funkcja
   (`success` i `fail`).
